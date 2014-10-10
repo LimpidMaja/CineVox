@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/movieBarListItem"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    android:clickable="true"
+    android:paddingTop="2dp">
+
+    <RelativeLayout
+        android:id="@+id/add_manually_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/search_friends"
+            android:layout_alignParentTop="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="5">
+
+            <EditText
+                android:layout_width="0dp"
+                android:layout_weight="4.5"
+                android:layout_height="40dp"
+                android:background="#ffd9b8f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:paddingLeft="10dp"
+                android:hint="Search for Movies"
+                android:gravity="left|center"/>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:background="#552535"
+                android:layout_weight="0.5" >
+                <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:drawable/ic_menu_search"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <ListView
+            android:id="@+id/listMovies"
+            android:layout_below="@+id/search_friends"
+            android:layout_alignParentBottom="true"
+            android:background="#ffffff"
+            android:dividerHeight="0dp"
+            android:divider="@null"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        </ListView>
+
+    </RelativeLayout>
+
+</LinearLayout>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/eventListItem"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    android:clickable="true"
+    android:paddingTop="2dp">
+
+    <LinearLayout
+        android:id="@+id/select_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:background="#ffffff">
+
+        <RelativeLayout
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:background="#ff877ac3"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_marginRight="2dp">
+            <Button
+                android:id="@+id/event_status_button"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:background="#ff877ac3"
+                android:gravity="center"
+                android:textColor="#ffffff"
+                android:text="Add Movies"
+                android:textSize="15sp" />
+
+        </RelativeLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="80dp"
+        android:layout_toRightOf="@+id/select_layout"
+        android:layout_toLeftOf="@+id/view_deatils_layout"
+        android:background="#F5F5F5"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:padding="5dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/eventName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#6C6C6C"
+            android:textSize="15sp"
+            android:textAlignment="center"
+            android:text="Oscar Party"
+            android:textStyle="bold"
+            android:typeface="sans" />
+
+        <TextView
+            android:id="@+id/eventPlace"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#B1B1B1"
+            android:textSize="12sp"
+            android:textAlignment="center"
+            android:textStyle="bold"
+            android:text="MMs Place"
+            android:typeface="sans" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/cardDefaultLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="80dp"
+        android:layout_toLeftOf="@+id/view_deatils_layout"
+        android:gravity="bottom"
+        android:paddingBottom="5dp"
+        android:paddingRight="20dp"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/eventTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textSize="14sp"
+            android:textColor="#B1B1B1"
+            android:textStyle="italic"
+            android:text="19:30"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="80dp"
+        android:layout_toRightOf="@+id/select_layout"
+        android:gravity="bottom"
+        android:paddingBottom="5dp"
+        android:paddingLeft="20dp"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/eventDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textSize="14sp"
+            android:textColor="#B1B1B1"
+            android:textStyle="italic"
+            android:text="17.10.2014"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/view_deatils_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true">
+
+        <RelativeLayout
+            android:layout_width="50dp"
+            android:layout_height="80dp"
+            android:background="#ffd9b8f1"
+            android:layout_marginLeft="2dp">
+            <Button
+                android:id="@+id/view_details_button"
+                android:layout_width="50dp"
+                android:layout_height="80dp"
+                android:background="#ffd9b8f1"
+                android:gravity="center"
+                android:textColor="#ffffff"
+                android:textSize="15sp" />
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:layout_centerInParent="true"
+                android:paddingRight="0dp"
+                android:src="@drawable/arrow_right"
+                />
+        </RelativeLayout>
+    </LinearLayout>
+
+</RelativeLayout>

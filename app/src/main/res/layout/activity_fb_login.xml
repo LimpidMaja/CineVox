@@ -1,0 +1,33 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:layout_gravity="center"
+    android:textAlignment="center"
+    tools:context=".SplashScreenActivity">
+
+    <TextView
+        android:id="@+id/welcome"
+        android:text="Welcome to CineVox"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#113151"
+        android:textColor="#ffffff"
+        android:textSize="50sp"
+        android:gravity="center"/>
+
+    <Button
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:id="@+id/authButton"
+        android:layout_width="wrap_content"
+        android:padding="0dp"
+        android:background="@drawable/facebook_login_button"
+        android:layout_height="60dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="30dp"
+        android:onClick="handleLoginClick"
+        />
+</RelativeLayout>

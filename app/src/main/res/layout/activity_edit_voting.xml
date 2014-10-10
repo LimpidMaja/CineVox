@@ -1,0 +1,328 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:layout_gravity="center"
+    android:textAlignment="center"
+    tools:context=".EditVotingActivity">
+
+    <RelativeLayout
+        android:id="@+id/titleBar"
+        android:layout_alignParentTop="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#ff3a3251"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp">
+
+        <TextView
+            android:text="Edit Voting Settings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="#ffffff"
+            android:textSize="20sp"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_below="@+id/titleBar"
+        android:layout_above="@+id/continueButton"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:weightSum="2">
+
+            <TextView
+                android:text="Use Voting"
+                android:layout_width="0dp"
+                android:layout_weight="1.5"
+                android:layout_height="40dp"
+                android:background="#ff877ac3"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+
+            <CheckBox
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="40dp"
+                android:checked="true"
+                android:background="#ffd9b8f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:paddingLeft="10dp"
+                android:layout_gravity="center"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <TextView
+                android:text="Time Limit"
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="40dp"
+                android:background="#ff877ac3"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+
+            <EditText
+                android:layout_width="0dp"
+                android:layout_weight="1.5"
+                android:layout_height="40dp"
+                android:background="#ffd9b8f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:paddingLeft="10dp"
+                android:hint="120 min"
+                android:gravity="left|center"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <TextView
+                android:text="Wait for percent of guests to vote"
+                android:layout_width="0dp"
+                android:layout_weight="1.5"
+                android:layout_height="40dp"
+                android:background="#ff877ac3"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+
+            <EditText
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="40dp"
+                android:background="#ffd9b8f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:paddingLeft="10dp"
+                android:hint="100%"
+                android:gravity="left|center"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_marginTop="10dp"
+            android:text="Choose Voting System"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:background="#ff877ac3"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:gravity="center"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="3">
+
+            <TextView
+                android:text="Rating"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:background="#ffa172f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:layout_marginRight="2dp"
+                android:gravity="center"/>
+
+            <TextView
+                android:text="Knockout"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:background="#ffd9b8f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+
+            <TextView
+                android:text="Tagging"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_marginLeft="2dp"
+                android:layout_height="40dp"
+                android:background="#ffd9b8f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="3">
+
+            <TextView
+                android:text="Rating System"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:background="#ff877ac3"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:layout_marginRight="2dp"
+                android:gravity="center"/>
+
+            <TextView
+                android:text="1-5"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:background="#ffa172f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+
+            <TextView
+                android:text="Give Points"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:layout_marginLeft="2dp"
+                android:background="#ffd9b8f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="3">
+
+            <TextView
+                android:text="On Tie?"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:background="#ff877ac3"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:layout_marginRight="2dp"
+                android:gravity="center"/>
+
+            <TextView
+                android:text="Knockout"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:background="#ffa172f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+
+            <TextView
+                android:text="Random"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:layout_marginLeft="2dp"
+                android:background="#ffd9b8f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <TextView
+                android:text="Knockout Rounds"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:background="#ff877ac3"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+
+            <EditText
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="40dp"
+                android:background="#ffd9b8f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:paddingLeft="10dp"
+                android:hint="5"
+                android:gravity="left|center"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:weightSum="2">
+
+            <TextView
+                android:text="Allow Already Watched Movies?"
+                android:layout_width="0dp"
+                android:layout_weight="1.5"
+                android:layout_height="40dp"
+                android:background="#ff877ac3"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:gravity="center"/>
+
+            <CheckBox
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="40dp"
+                android:checked="true"
+                android:background="#ffd9b8f1"
+                android:textColor="#ffffff"
+                android:textSize="18sp"
+                android:paddingLeft="10dp"
+                android:layout_gravity="center"
+                android:gravity="center"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/continueButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Done"
+        android:textSize="40sp"
+        android:padding="5dp"
+        android:background="#f23421"
+        android:textColor="#ffffff"
+        android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>
