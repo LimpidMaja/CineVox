@@ -24,6 +24,9 @@ import com.limpidgreen.cinevox.NewEventActivity;
 import com.limpidgreen.cinevox.R;
 import com.limpidgreen.cinevox.RateMoviesActivity;
 import com.limpidgreen.cinevox.WinnerActivity;
+import com.limpidgreen.cinevox.model.Event;
+
+import java.util.ArrayList;
 
 
 /**
@@ -35,16 +38,29 @@ import com.limpidgreen.cinevox.WinnerActivity;
 public class EventListAdapter extends BaseAdapter {
     private static LayoutInflater inflater = null;
     private Context mContext;
+    private ArrayList<Event> mEventList;
     /**
      * Constructor.
      *
      * @param context
      */
-    public EventListAdapter(/*ArrayList<Event> eventList,*/ Context context) {
+    public EventListAdapter(ArrayList<Event> eventList, Context context) {
         mContext = context;
+        mEventList = eventList;
         inflater = (LayoutInflater) mContext
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     } // end EventListAdapter()
+
+    /**
+     * Update events list.
+     *
+     * @param events
+     */
+    public void updateEventList(ArrayList<Event> events) {
+        mEventList = events;
+        notifyDataSetChanged();
+    } // end updateEventList()
+
 
     /*
 	 * (non-Javadoc)
@@ -53,7 +69,7 @@ public class EventListAdapter extends BaseAdapter {
 	 */
     @Override
     public int getCount() {
-        return 6;
+        return mEventList.size();
     } // end getCount()
 
     /*
@@ -63,7 +79,7 @@ public class EventListAdapter extends BaseAdapter {
      */
     @Override
     public Object getItem(int position) {
-        return new Object();
+        return mEventList.get(position);
     } // end getItem()
 
     /*
@@ -73,7 +89,7 @@ public class EventListAdapter extends BaseAdapter {
      */
     @Override
     public long getItemId(int position) {
-        return position;
+        return mEventList.get(position).getId();
     } // end getItemId()
 
     /*
@@ -88,6 +104,17 @@ public class EventListAdapter extends BaseAdapter {
         if (convertView == null) {
             vi = inflater.inflate(R.layout.list_event_item, null);
         } // end if
+        Event event = mEventList.get(position);
+
+        TextView name = (TextView) vi.findViewById(R.id.eventName);
+        TextView place = (TextView) vi.findViewById(R.id.eventPlace);
+        TextView date = (TextView) vi.findViewById(R.id.date);
+        TextView time = (TextView) vi.findViewById(R.id.time);
+
+        name.setText(event.getName());
+        place.setText(event.getPlace());
+        date.setText(event.getDate().toString());
+        time.setText(event.getTime().toString());
 
         Button eventStatus = (Button) vi.findViewById(R.id.event_status_button);
         switch (position) {

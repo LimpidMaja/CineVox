@@ -51,6 +51,7 @@
                 android:gravity="center"/>
 
             <EditText
+                android:id="@+id/eventNameEdit"
                 android:layout_width="0dp"
                 android:layout_weight="1.5"
                 android:layout_height="40dp"
@@ -73,6 +74,7 @@
             android:gravity="center"/>
 
         <EditText
+            android:id="@+id/eventDescriptionEdit"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:background="#ffd9b8f1"
@@ -118,26 +120,33 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:weightSum="2">
-            <EditText
+
+            <Button
+                android:id="@+id/eventDate"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="40dp"
                 android:background="#ffd9b8f1"
                 android:textColor="#ffffff"
                 android:textSize="15sp"
+                android:inputType="date"
                 android:layout_marginRight="2dp"
                 android:hint="17.10.2014"
+                android:onClick="showDatePickerDialog"
                 android:gravity="center"/>
 
-            <EditText
+            <Button
+                android:id="@+id/eventTime"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="40dp"
                 android:background="#ffd9b8f1"
                 android:textColor="#ffffff"
                 android:textSize="15sp"
+                android:inputType="time"
                 android:layout_marginLeft="2dp"
                 android:hint="19:30"
+                android:onClick="showTimePickerDialog"
                 android:gravity="center"/>
 
         </LinearLayout>
@@ -160,6 +169,7 @@
                 android:gravity="center"/>
 
             <EditText
+                android:id="@+id/eventPlaceEdit"
                 android:layout_width="0dp"
                 android:layout_weight="1.5"
                 android:layout_height="40dp"
@@ -292,7 +302,7 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/continueButton"
+        android:id="@+id/createEventButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Create"
@@ -300,6 +310,7 @@
         android:padding="5dp"
         android:background="#f23421"
         android:textColor="#ffffff"
+        android:onClick="handleCreateEventClick"
         android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>

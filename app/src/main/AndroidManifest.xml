@@ -12,6 +12,12 @@
     <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <permission android:name="com.example.gcm.permission.C2D_MESSAGE" android:protectionLevel="signature" />
+    <uses-permission android:name="com.example.gcm.permission.C2D_MESSAGE" />
+
 
     <application
         android:name=".CineVoxApplication"
@@ -19,6 +25,17 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+
+        <provider android:authorities="com.limpidgreen.cinevox.events.provider"
+            android:name=".dao.EventsContentProvider"
+            android:label="@string/provider_name_events"
+            android:exported="false"/>
+
+        <provider android:authorities="com.limpidgreen.cinevox.friends.provider"
+            android:name=".dao.FriendsContentProvider"
+            android:label="@string/provider_name_friends"
+            android:exported="false"/>
+
         <service
             android:name="com.limpidgreen.cinevox.auth.AuthenticationService"
             android:exported="true" >
@@ -31,14 +48,50 @@
                 android:resource="@xml/authenticator" />
         </service>
 
+        <receiver
+            android:name=".util.GCMBroadcastReceiver"
+            android:permission="com.google.android.c2dm.permission.SEND" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <category android:name="com.codepath.android.gcm" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".util.GCMNotificationIntentService" />
+
+        <meta-data android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <!-- Sync adapter related service -->
+        <service
+            android:name=".syncadapter.EventsSyncService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/events_sync_adapter" />
+        </service>
+
+        <service
+            android:name=".syncadapter.FriendsSyncService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/friends_sync_adapter" />
+        </service>
+
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/app_id" />
 
         <activity
             android:name=".SplashScreenActivity"
-            android:label="@string/app_name"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -61,8 +114,7 @@
         </activity>
         <activity
             android:name=".NewEventActivity"
-            android:label="@string/new_event"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:label="@string/new_event">
         </activity>
         <activity
             android:name=".SelectFriendsActivity"

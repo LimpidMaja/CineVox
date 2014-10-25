@@ -18,6 +18,14 @@ public class Constants {
     /** The tag used to log to adb console. */
     public static final String TAG = "CineVox";
 
+    /** Google Project Number. */
+    public static final String GOOGLE_PROJ_ID = "1078274153050";
+
+    /**
+     * User Data Bundle.
+     */
+    public static final String USER_DATA_GCM_REG_ID = "com.limpidgreen.cinevox.userdata.gcmregid";
+
     /**
      * Account type string.
      */
@@ -29,7 +37,12 @@ public class Constants {
     /** The Intent extra to store username. */
     public static final String PARAM_USERNAME = "username";
 
+    /** The Intent extra to store friend list. */
+    public static final String PARAM_FRIEND_LIST = "friend_list";
+
     /** Return codes */
     public static final int ACCOUNT_LOG_IN_REQUEST_CODE = 0;
+
+    public static final int EVENT_FRIEND_SELECT_REQUEST_CODE = 1;
 
 }

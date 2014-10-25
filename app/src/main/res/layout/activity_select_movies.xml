@@ -26,34 +26,42 @@
 
     </RelativeLayout>
 
-    <it.sephiroth.android.library.widget.HListView
-        android:id="@+id/listMoviesBar"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_below="@+id/titleBar"
-        android:layout_height="60dp"
-        android:background="#ffffff" />
-
-    <LinearLayout
-        android:id="@+id/select_movies_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/listMoviesBar"
         android:layout_above="@+id/continueButton"
-        android:background="#ffd9b8f1"
+        android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <ExpandableListView
-            android:id="@+id/expandableList"
+        <it.sephiroth.android.library.widget.HListView
+            android:id="@+id/listMoviesBar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="60dp"
+            android:background="#ffffff" />
 
-        </ExpandableListView>
+        <LinearLayout
+            android:id="@+id/select_movies_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/listMoviesBar"
+            android:layout_above="@+id/continueButton"
+            android:background="#ffd9b8f1"
+            android:orientation="vertical">
 
+            <ExpandableListView
+                android:id="@+id/expandableList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            </ExpandableListView>
+
+
+        </LinearLayout>
 
     </LinearLayout>
 
     <Button
-        android:id="@+id/continueButton"
+        android:id="@+id/done_select_movies"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Done"
@@ -61,6 +69,7 @@
         android:padding="5dp"
         android:background="#f23421"
         android:textColor="#ffffff"
+        android:onClick="handleCreateEventClick"
         android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>

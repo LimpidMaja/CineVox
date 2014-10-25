@@ -15,7 +15,9 @@ import android.accounts.AccountManagerFuture;
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -24,8 +26,13 @@ import android.widget.Toast;
 
 import com.facebook.Session;
 import com.facebook.SessionState;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.limpidgreen.cinevox.dao.CineVoxDBHelper;
+import com.limpidgreen.cinevox.dao.EventsContentProvider;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.NetworkUtil;
+import com.limpidgreen.cinevox.util.Utility;
 
 import java.io.IOException;
 
@@ -55,6 +62,15 @@ public class SplashScreenActivity extends Activity {
                     Toast.LENGTH_LONG);
             toast.show();
         } else {
+            //this.deleteDatabase(CineVoxDBHelper.DATABASE_NAME);
+
+            if (!Utility.checkPlayServices(this, getApplicationContext())) {
+                Toast.makeText(
+                        getApplicationContext(),
+                        "This device doesn't support Play services, App will not work normally",
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
 
             mApplication = ((CineVoxApplication) getApplication());
             mAccountManager = AccountManager.get(this);
@@ -101,6 +117,12 @@ public class SplashScreenActivity extends Activity {
     } // end onCreate()
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        Utility.checkPlayServices(this, getApplicationContext());
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Session.getActiveSession().onActivityResult(this, requestCode, resultCode, data);
@@ -108,6 +130,9 @@ public class SplashScreenActivity extends Activity {
 
     private void onFetchAuthTokenResult() {
         mApplication.setAPIToken(mAuthToken);
+        mApplication.setmAccount(mAccount);
+        Bundle params = new Bundle();
+        ContentResolver.requestSync(mAccount, EventsContentProvider.AUTHORITY, params);
 
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);

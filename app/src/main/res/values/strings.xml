@@ -2,14 +2,24 @@
 <resources>
 
     <string name="app_name">CineVox</string>
+    <string name="provider_name_events">Events</string>
+    <string name="provider_name_friends">Friends</string>
     <string name="app_id">231004317105383</string>
-    <string name="hello_world">Hello world!</string>
+    <!--APP 243960519143096-->
+    <!--HEROKU 231004317105383-->
+
     <string name="action_settings">Settings</string>
+
+
+
     <string name="invalid_token">Invalid authTokenType</string>
     <string name="noInternet">No Internet available! Try again later.</string>
     <string name="login_activity_error">There was a problem with your authentication. </string>
+    <string name="email_empty">Please enter a valid email address. </string>
     <string name="ui_activity_authenticating">Authenticating\u2026</string>
     <string name="activity_login_success">Login Successful</string>
+
+    <string name="register_gcm_error">Reg ID Creation Failed.\n\nEither you have not enabled Internet or GCM server is busy right now. Make sure you enabled Internet and try registering again after some time.</string>
 
     <string name="new_event">New Event</string>
 

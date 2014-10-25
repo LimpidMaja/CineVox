@@ -5,17 +5,49 @@
     android:gravity="center"
     android:layout_gravity="center"
     android:textAlignment="center"
+    android:background="#113151"
     tools:context=".SplashScreenActivity">
 
     <TextView
         android:id="@+id/welcome"
         android:text="Welcome to CineVox"
+        android:layout_alignParentTop="true"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
         android:background="#113151"
         android:textColor="#ffffff"
         android:textSize="50sp"
         android:gravity="center"/>
+
+
+    <LinearLayout
+        android:id="@+id/email_edit_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="10dp"
+        android:layout_centerInParent="true"
+        android:orientation="vertical">
+    <TextView
+        android:text="Please Enter your Email"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="10dp"
+        android:background="#113151"
+        android:textColor="#ffffff"
+        android:textSize="25sp"
+        android:gravity="center"/>
+
+    <EditText
+        android:id="@+id/email_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textEmailAddress"
+        android:hint="johnny.appleseed@email.com"
+        />
+
+    </LinearLayout>
 
     <Button
         android:layout_alignParentBottom="true"
@@ -29,5 +61,22 @@
         android:layout_gravity="center_horizontal"
         android:layout_margin="30dp"
         android:onClick="handleLoginClick"
+        />
+
+    <Button
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:id="@+id/email_edit_button"
+        android:layout_width="match_parent"
+        android:padding="0dp"
+        android:text="Sign in"
+        android:textSize="30sp"
+        android:textColor="#ffffff"
+        android:background="#ff411019"
+        android:layout_height="60dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="30dp"
+        android:onClick="handleEmailSubmit"
         />
 </RelativeLayout>

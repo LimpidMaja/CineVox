@@ -12,21 +12,32 @@ import android.accounts.Account;
 import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.facebook.*;
 import com.facebook.model.*;
 
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.limpidgreen.cinevox.R;
+import com.limpidgreen.cinevox.dao.EventsContentProvider;
+import com.limpidgreen.cinevox.dao.FriendsContentProvider;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.NetworkUtil;
+import com.limpidgreen.cinevox.util.Utility;
 
+import java.io.IOException;
 import java.util.Date;
 
 /**
@@ -36,11 +47,18 @@ import java.util.Date;
  *
  */
 public class FBLoginActivity extends AccountAuthenticatorActivity {
+    private GoogleCloudMessaging mGcmObject;
+    private Context mApplicationContext;
     private AccountManager mAccountManager;
+    private String mGcmRegId;
     private String accessToken;
     private String userId;
     private String email;
     private Date expirationDate;
+
+    private LinearLayout mEmailEditLayout;
+    private Button mFBSigninButton;
+    private Button mEmailSigninButton;
 
     /** Keep track of the login task so can cancel it if requested */
     private UserAuthenticateTask mAuthTask = null;
@@ -57,7 +75,15 @@ public class FBLoginActivity extends AccountAuthenticatorActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mApplicationContext = getApplicationContext();
+
         setContentView(R.layout.activity_fb_login);
+
+        mEmailEditLayout = (LinearLayout) findViewById(R.id.email_edit_layout);
+        mEmailEditLayout.setVisibility(View.GONE);
+
+        mEmailSigninButton = (Button) findViewById(R.id.email_edit_button);
+        mEmailSigninButton.setVisibility(View.GONE);
 
         mAccountManager = AccountManager.get(this);
     } // end onCreate()
@@ -95,18 +121,70 @@ public class FBLoginActivity extends AccountAuthenticatorActivity {
                                 userId = user.getId();
                                 email = (String) user.getProperty("email");
                                 Log.i(Constants.TAG, "USER ID: " + user.getId());
-                                Log.i(Constants.TAG, "EMAIL: " + email);
+                                //Log.i(Constants.TAG, "EMAIL: " + email);
 
-                                if (mAuthTask == null) {
-                                    mAuthTask = new UserAuthenticateTask();
-                                    mAuthTask.execute();
-                                } // end if
+                                if (email != null && !email.isEmpty()) {
+                                    if (Utility.checkPlayServices(FBLoginActivity.this, mApplicationContext)) {
+                                        registerGcmInBackground();
+                                    } else {
+                                        hideProgress();
+                                    } // end if-else
+
+                                    /*if (mAuthTask == null) {
+                                        mAuthTask = new UserAuthenticateTask();
+                                        mAuthTask.execute();
+                                    } // end if*/
+                                } else {
+                                    hideProgress();
+
+                                    mEmailEditLayout = (LinearLayout) findViewById(R.id.email_edit_layout);
+                                    mEmailEditLayout.setVisibility(View.VISIBLE);
+
+                                    mEmailSigninButton = (Button) findViewById(R.id.email_edit_button);
+                                    mEmailSigninButton.setVisibility(View.VISIBLE);
+
+                                    mFBSigninButton = (Button) findViewById(R.id.authButton);
+                                    mFBSigninButton.setVisibility(View.GONE);
+                                }
                             }
                         }
                     }).executeAsync();
                 }
             }
         });
+    }
+
+    /**
+     * Handle Email Submit button click.
+     *
+     * @param v view
+     */
+    public void handleEmailSubmit(View v) {
+        EditText emailEdit = (EditText) findViewById(R.id.email_edit);
+
+        Log.i(Constants.TAG, "EMAIL text: " + emailEdit );
+        Log.i(Constants.TAG, "EMAIL 2: " + emailEdit.getText().toString() );
+
+        if (emailEdit != null && !emailEdit.getText().toString().trim().isEmpty()
+                && com.limpidgreen.cinevox.util.Utility.validate(emailEdit.getText().toString().trim())) {
+            email = emailEdit.getText().toString();
+            Log.i(Constants.TAG, "EMAIL: " + email);
+
+            if (Utility.checkPlayServices(FBLoginActivity.this, mApplicationContext)) {
+                showProgress();
+                registerGcmInBackground();
+            } // end if
+
+            /*if (mAuthTask == null) {
+                mAuthTask = new UserAuthenticateTask();
+                mAuthTask.execute();
+            } // end if*/
+        } else {
+            Toast toast = Toast.makeText(this,
+                    getText(R.string.email_empty),
+                    Toast.LENGTH_SHORT);
+            toast.show();
+        }
     }
 
     @Override
@@ -140,6 +218,39 @@ public class FBLoginActivity extends AccountAuthenticatorActivity {
         } // end if
     } // end hideProgress()
 
+    public void onRegisterGcmResult(String regId) {
+        boolean success = ((regId != null) && (regId.length() > 0));
+
+        mGcmRegId = null;
+
+        if (success) {
+            mGcmRegId = regId;
+
+            Toast.makeText(
+                    mApplicationContext,
+                    "Registered with GCM Server successfully: " + mGcmRegId, Toast.LENGTH_SHORT).show();
+
+            if (mAuthTask == null) {
+                mAuthTask = new UserAuthenticateTask();
+                mAuthTask.execute();
+            } // end if
+        } else {
+            hideProgress();
+            Toast toast = Toast.makeText(this,
+                    getText(R.string.register_gcm_error),
+                    Toast.LENGTH_SHORT);
+            toast.show();
+        }
+    }
+
+    public void onRegisterGcmError() {
+        hideProgress();
+        Toast toast = Toast.makeText(this,
+                getText(R.string.register_gcm_error),
+                Toast.LENGTH_SHORT);
+        toast.show();
+    } // end onRegisterGcmError()
+
     /**
      * Called when the authentication process completes (see attemptLogin()).
      *
@@ -150,6 +261,11 @@ public class FBLoginActivity extends AccountAuthenticatorActivity {
     public void onAuthenticationResult(String authToken) {
         boolean success = ((authToken != null) && (authToken.length() > 0));
 
+
+        /*if (!success) {
+            authToken = "test_token";
+            success = true;
+        }*/
         // Our task is complete, so clear it out
         mAuthTask = null;
 
@@ -162,10 +278,19 @@ public class FBLoginActivity extends AccountAuthenticatorActivity {
             Account[] userAccounts = mAccountManager
                     .getAccountsByType(Constants.ACCOUNT_TYPE);
             if (userAccounts.length  < 1) {
-                mAccountManager.addAccountExplicitly(account, null, null);
-                // Set contacts sync for this account.
-                //ContentResolver.setSyncAutomatically(account,
-                 //       ContactsContract.AUTHORITY, true);
+                Bundle data = new Bundle();
+                Bundle userData = new Bundle();
+                userData.putString(Constants.USER_DATA_GCM_REG_ID, mGcmRegId);
+                data.putBundle(AccountManager.KEY_USERDATA, userData);
+
+                mAccountManager.addAccountExplicitly(account, null, data);
+                // Set events sync for this account.
+                ContentResolver.setSyncAutomatically(account,
+                        EventsContentProvider.AUTHORITY, true);
+                // Set friends sync for this account.
+                ContentResolver.setSyncAutomatically(account,
+                        FriendsContentProvider.AUTHORITY, true);
+
             } else {
                 mAccountManager.setPassword(account, null);
             } // end if-else
@@ -233,7 +358,7 @@ public class FBLoginActivity extends AccountAuthenticatorActivity {
             // We do the actual work of authenticating the user
             // in the NetworkUtilities class.
             try {
-                return NetworkUtil.authenticate(userId, accessToken, expirationDate);
+                return NetworkUtil.authenticate(userId, accessToken, mGcmRegId, expirationDate, email);
             } catch (Exception ex) {
 
                 return null;
@@ -264,4 +389,31 @@ public class FBLoginActivity extends AccountAuthenticatorActivity {
             onAuthenticationCancel();
         } // end onCancelled()
     } // end UserLoginTask()
+
+    private void registerGcmInBackground() {
+        new AsyncTask<Void, Void, String>() {
+            @Override
+            protected String doInBackground(Void... params) {
+                try {
+                    if (mGcmObject == null) {
+                        mGcmObject = GoogleCloudMessaging
+                                .getInstance(mApplicationContext);
+                    } // end if
+                    return mGcmObject
+                            .register(Constants.GOOGLE_PROJ_ID);
+                } catch (IOException ex) {
+                    return null;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(String regId) {
+                if (regId != null) {
+                    onRegisterGcmResult(regId);
+                } else {
+                    onRegisterGcmError();
+                } // end if-else
+            }
+        }.execute(null, null, null);
+    }
 }

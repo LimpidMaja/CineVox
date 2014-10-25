@@ -87,6 +87,7 @@
         android:textSize="40sp"
         android:padding="5dp"
         android:background="#f23421"
+        android:onClick="handleDoneClick"
         android:textColor="#ffffff"
         android:layout_alignParentBottom="true"/>
 

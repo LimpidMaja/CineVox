@@ -8,9 +8,14 @@
  */
 package com.limpidgreen.cinevox;
 
+import android.accounts.Account;
 import android.app.Application;
 
 import com.facebook.model.GraphUser;
+import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 
 /**
  * CineVox Application.
@@ -20,6 +25,7 @@ import com.facebook.model.GraphUser;
  */
 public class CineVoxApplication extends Application {
     private String APIToken;
+    private Account mAccount;
     private GraphUser user;
     private String facebookAccessToken;
 
@@ -33,5 +39,16 @@ public class CineVoxApplication extends Application {
 
     @Override
     public void onCreate() {
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(
+                this).build();
+        ImageLoader.getInstance().init(config);
+    }
+
+    public Account getmAccount() {
+        return mAccount;
+    }
+
+    public void setmAccount(Account mAccount) {
+        this.mAccount = mAccount;
     }
 }

@@ -1,5 +1,5 @@
 /**
- * EventListAdapter.java
+ * FriendListAdapter.java
  *
  * 10.10.2014
  *
@@ -9,7 +9,7 @@
 package com.limpidgreen.cinevox.adapters;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,10 +18,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.limpidgreen.cinevox.R;
+import com.limpidgreen.cinevox.model.Friend;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+
+import java.util.ArrayList;
 
 
 /**
- * Adapter for the Event List.
+ * Adapter for the Friends List.
  *
  * @author MajaDobnik
  *
@@ -29,13 +34,18 @@ import com.limpidgreen.cinevox.R;
 public class FriendListAdapter extends BaseAdapter {
     private static LayoutInflater inflater = null;
     private Context mContext;
+    private ArrayList<Friend> mFriendList;
+    private ArrayList<Friend> mSelectedFriendList;
+
     /**
      * Constructor.
      *
      * @param context
      */
-    public FriendListAdapter(/*ArrayList<Event> eventList,*/ Context context) {
+    public FriendListAdapter(ArrayList<Friend> friendList, ArrayList<Friend> selectedFriendList, Context context) {
         mContext = context;
+        mFriendList = friendList;
+        mSelectedFriendList = selectedFriendList;
         inflater = (LayoutInflater) mContext
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     } // end EventListAdapter()
@@ -47,7 +57,7 @@ public class FriendListAdapter extends BaseAdapter {
 	 */
     @Override
     public int getCount() {
-        return 3;
+        return mFriendList.size();
     } // end getCount()
 
     /*
@@ -57,7 +67,7 @@ public class FriendListAdapter extends BaseAdapter {
      */
     @Override
     public Object getItem(int position) {
-        return new Object();
+        return mFriendList.get(position);
     } // end getItem()
 
     /*
@@ -67,7 +77,7 @@ public class FriendListAdapter extends BaseAdapter {
      */
     @Override
     public long getItemId(int position) {
-        return position;
+        return mFriendList.get(position).getId();
     } // end getItemId()
 
     /*
@@ -83,23 +93,41 @@ public class FriendListAdapter extends BaseAdapter {
             vi = inflater.inflate(R.layout.list_friend_item, null);
         } // end if
 
+        final Friend friend = mFriendList.get(position);
+
         TextView friendName = (TextView) vi.findViewById(R.id.friendName);
-        ImageView selectIcon = (ImageView) vi.findViewById(R.id.select_icon);
-        switch (position) {
-            case 0:
-                friendName.setText("Iris");
-                break;
-            case 1:
-                friendName.setText("Mitja");
-                selectIcon.setImageResource(R.drawable.select_big);
-                break;
-            case 2:
-                friendName.setText("Primož");
-                selectIcon.setImageResource(R.drawable.select_empty);
-                break;
-            default:
+        final ImageView selectIcon = (ImageView) vi.findViewById(R.id.select_icon);
+        ImageView friendImage = (ImageView) vi.findViewById(R.id.friend_image);
+        DisplayImageOptions mOptions = new DisplayImageOptions.Builder()
+                .cacheInMemory(true)
+                .bitmapConfig(Bitmap.Config.RGB_565).build();
+
+        ImageLoader.getInstance().displayImage("http://graph.facebook.com/" + friend.getFacebookUID() + "/picture?type=square&height=150&width=150", friendImage, mOptions);
+        friendName.setText(friend.getName());
+
+        if (mSelectedFriendList.contains(friend)) {
+            selectIcon.setImageResource(R.drawable.select_big);
+        } else {
+            selectIcon.setImageResource(R.drawable.select_empty);
         }
+
+        vi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mSelectedFriendList.contains(friend)) {
+                    mSelectedFriendList.remove(friend);
+                    selectIcon.setImageResource(R.drawable.select_empty);
+                } else {
+                    mSelectedFriendList.add(friend);
+                    selectIcon.setImageResource(R.drawable.select_big);
+                }
+            }
+        });
 
         return vi;
     } // end getView()
+
+    public ArrayList<Friend> getmSelectedFriendList() {
+        return mSelectedFriendList;
+    }
 }

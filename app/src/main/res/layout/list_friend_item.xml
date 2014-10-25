@@ -23,7 +23,7 @@
             android:gravity="center"
             android:layout_marginRight="2dp">
             <ImageView
-                android:id="@+id/event_status"
+                android:id="@+id/friend_image"
                 android:layout_width="75dp"
                 android:layout_height="75dp"
                 android:background="#ff877ac3"
@@ -69,13 +69,6 @@
             android:layout_height="80dp"
             android:background="#ffd9b8f1"
             android:layout_marginLeft="2dp">
-            <Button
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:background="#ffd9b8f1"
-                android:gravity="center"
-                android:textColor="#ffffff"
-                android:textSize="15sp" />
 
             <ImageView
                 android:id="@+id/select_icon"
