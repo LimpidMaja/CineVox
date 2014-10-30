@@ -11,12 +11,24 @@ package com.limpidgreen.cinevox;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.widget.ExpandableListView;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import com.limpidgreen.cinevox.adapters.MoviesBarListAdapter;
-import com.limpidgreen.cinevox.adapters.MoviesSelectExpandableListAdapter;
+import com.limpidgreen.cinevox.adapters.MoviesSelectListAdapter;
+import com.limpidgreen.cinevox.model.Friend;
+import com.limpidgreen.cinevox.model.Movie;
+import com.limpidgreen.cinevox.util.Constants;
+import com.limpidgreen.cinevox.util.NetworkUtil;
+
+import java.util.ArrayList;
 
 import it.sephiroth.android.library.widget.HListView;
 
@@ -27,6 +39,13 @@ import it.sephiroth.android.library.widget.HListView;
  *
  */
 public class SelectMoviesActivity extends Activity {
+    /** Application */
+    private CineVoxApplication mApplication;
+
+    private SearchMoviesAsyncTask mSearchMoviesAsyncTask;
+
+    private ArrayList<Movie> mSelectedMovies;
+
     private static int prev = -1;
 
     /** User Account */
@@ -38,20 +57,67 @@ public class SelectMoviesActivity extends Activity {
 
     private MoviesBarListAdapter adapter;
 
+    private MoviesSelectListAdapter adapterManual;
+
+    private EditText mSearchManually;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_movies);
 
+        if (savedInstanceState != null) {
+            mSelectedMovies = new ArrayList<Movie>();
+        } else {
+            Bundle bundle = getIntent().getExtras();
+            mSelectedMovies = bundle.getParcelableArrayList(Constants.PARAM_MOVIE_LIST);
+            Log.i(Constants.TAG, "mSelectedMovies: " + mSelectedMovies);
+        } // end if-else
+
+        mApplication = ((CineVoxApplication) getApplication());
+
         HListView list = (HListView) findViewById(R.id.listMoviesBar);
-        adapter = new MoviesBarListAdapter(this);
+        adapter = new MoviesBarListAdapter(mSelectedMovies, this);
         list.setAdapter(adapter);
 
-        final ExpandableListView listView = (ExpandableListView) findViewById(R.id.expandableList);
-        MoviesSelectExpandableListAdapter adapter = new MoviesSelectExpandableListAdapter(this);
-        listView.setAdapter(adapter);
+        if (mApplication.getAPIToken() == null) {
+            mApplication.startAuthTokenFetch(this);
+        }
 
-        listView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+        mSearchManually = (EditText) findViewById(R.id.searchManualMovies);
+        mSearchManually.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (mSearchManually.getText().toString().length() > 1) {
+                    if (mSearchMoviesAsyncTask != null) {
+                        mSearchMoviesAsyncTask.cancel(true);
+                    }
+                    mSearchMoviesAsyncTask = new SearchMoviesAsyncTask();
+                    mSearchMoviesAsyncTask.execute();
+                }
+            }
+        });
+
+        ListView listManually = (ListView) findViewById(R.id.listManualMovies);
+        adapterManual = new MoviesSelectListAdapter(new ArrayList<Movie>(), mSelectedMovies, this);
+        listManually.setAdapter(adapterManual);
+
+
+        //final ExpandableListView listView = (ExpandableListView) findViewById(R.id.expandableList);
+        //MoviesSelectExpandableListAdapter adapter = new MoviesSelectExpandableListAdapter(this);
+        //listView.setAdapter(adapter);
+
+        /*listView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
             @Override
             public void onGroupExpand(int groupPosition) {
                 if(prev != -1 && prev != groupPosition) {
@@ -59,7 +125,61 @@ public class SelectMoviesActivity extends Activity {
                 }
                 prev = groupPosition;
             }
-        });
+        });*/
     }
 
+    public void updateManualSearchList(ArrayList<Movie> movies) {
+        adapterManual.updateList(movies);
+    }
+
+    public void updateSelectedMoviesList(ArrayList<Movie> movies) {
+       // adapter.updateList(movies);
+        adapter.notifyDataSetChanged();
+    }
+
+    /**
+     * Handle Done in Movies select.
+     *
+     * @param v view
+     */
+    public void handleDoneClick(View v) {
+        Intent intent = new Intent();
+        intent.putExtra(Constants.PARAM_MOVIE_LIST, mSelectedMovies);
+        setResult(RESULT_OK, intent);
+        finish();
+    }
+
+    /**
+     * Fetches Movie from AutoComplete Web Service.
+     *
+     * @author MajaDobnik
+     *
+     */
+    private class SearchMoviesAsyncTask extends AsyncTask<Void, Void, ArrayList<Movie>> {
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#doInBackground(Params[])
+         */
+        @Override
+        protected ArrayList<Movie> doInBackground(Void... v) {
+            String term = mSearchManually.getText().toString().trim();
+            Log.i(Constants.TAG, "TOKEN:" + mApplication.getAPIToken());
+
+            return NetworkUtil.getMoviesBySearch(mApplication.getAPIToken(), term);
+        } // end doInBackground()
+
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+         */
+        @Override
+        protected void onPostExecute(ArrayList<Movie> movies) {
+            if (movies != null) {
+                Log.i(Constants.TAG, "MOVIES: " + movies);
+                updateManualSearchList(movies);
+            }
+        } // end onPostExecute()
+    } // end SearchMoviesAsyncTask()
 }

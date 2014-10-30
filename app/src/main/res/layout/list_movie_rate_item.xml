@@ -18,15 +18,15 @@
 
         <RelativeLayout
             android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_height="80dp"
             android:background="#ff877ac3"
             android:layout_gravity="center"
             android:gravity="center"
             android:layout_marginRight="2dp">
             <ImageView
-                android:id="@+id/event_status"
+                android:id="@+id/movie_poster"
                 android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_height="80dp"
                 android:background="#ff877ac3"
                 android:gravity="center"
                 android:textColor="#ffffff"
@@ -36,7 +36,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layout_height="50dp"
+        android:layout_height="80dp"
         android:layout_width="0dp"
         android:layout_weight="1.5"
         android:layout_toRightOf="@+id/select_layout"
@@ -47,7 +47,7 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/friendName"
+            android:id="@+id/movie_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#6C6C6C"
@@ -60,7 +60,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:layout_height="50dp"
+        android:layout_height="80dp"
         android:layout_width="0dp"
         android:layout_weight="2"
         android:layout_toRightOf="@+id/select_layout"
@@ -71,22 +71,27 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@android:drawable/btn_star_big_on"/>
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@android:drawable/btn_star_big_on"/>
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@android:drawable/btn_star_big_on"/>
-        <ImageView
+            android:id="@+id/movie_star_1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@android:drawable/star_off"/>
         <ImageView
+            android:id="@+id/movie_star_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/star_off"/>
+        <ImageView
+            android:id="@+id/movie_star_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/star_off"/>
+        <ImageView
+            android:id="@+id/movie_star_4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/star_off"/>
+        <ImageView
+            android:id="@+id/movie_star_5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@android:drawable/star_off"/>

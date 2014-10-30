@@ -12,12 +12,14 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.limpidgreen.cinevox.R;
+import com.limpidgreen.cinevox.model.Movie;
+
+import java.util.ArrayList;
 
 
 /**
@@ -60,13 +62,13 @@ public class MoviesSelectExpandableListAdapter extends BaseExpandableListAdapter
                 convertView = inflater.inflate(R.layout.list_movie_select_add_manually, null);
 
                 ListView listManually = (ListView) convertView.findViewById(R.id.listMovies);
-                MoviesListAdapter adapterManually = new MoviesListAdapter(mContext);
+                MoviesSelectListAdapter adapterManually = new MoviesSelectListAdapter(new ArrayList<Movie>(), new ArrayList<Movie>(), mContext);
                 listManually.setAdapter(adapterManually);
                 break;
             case 1:
                 convertView = inflater.inflate(R.layout.list_movie_select_add_manually, null);
                 ListView list = (ListView) convertView.findViewById(R.id.listMovies);
-                MoviesListAdapter adapter = new MoviesListAdapter(mContext);
+                MoviesSelectListAdapter adapter = new MoviesSelectListAdapter(new ArrayList<Movie>(), new ArrayList<Movie>(), mContext);
                 list.setAdapter(adapter);
                 break;
             case 2:
@@ -80,7 +82,7 @@ public class MoviesSelectExpandableListAdapter extends BaseExpandableListAdapter
             case 4:
                 convertView = inflater.inflate(R.layout.list_movie_select_from_collection, null);
                 ListView listCollection = (ListView) convertView.findViewById(R.id.listMovies);
-                MoviesListAdapter adapterCollection = new MoviesListAdapter(mContext);
+                MoviesSelectListAdapter adapterCollection = new MoviesSelectListAdapter(new ArrayList<Movie>(), new ArrayList<Movie>(), mContext);
                 listCollection.setAdapter(adapterCollection);
 
                 break;

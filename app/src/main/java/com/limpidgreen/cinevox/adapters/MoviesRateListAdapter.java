@@ -9,13 +9,23 @@
 package com.limpidgreen.cinevox.adapters;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.limpidgreen.cinevox.R;
+import com.limpidgreen.cinevox.model.Event;
+import com.limpidgreen.cinevox.model.Movie;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -28,16 +38,23 @@ public class MoviesRateListAdapter extends BaseAdapter {
     private static LayoutInflater inflater = null;
     private Context mContext;
 
+    private ArrayList<Movie> mMovieList;
+    private Event mEvent;
+    private HashMap<Movie, Integer> mRatedMovieMap;
+
     /**
      * Constructor.
      *
      * //@param context
      */
-    public MoviesRateListAdapter(/*ArrayList<Event> eventList,*/ Context context) {
+    public MoviesRateListAdapter(Event event, Context context) {
         mContext = context;
+        mEvent = event;
+        mMovieList = event.getMovieList();
         inflater = (LayoutInflater) mContext
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    } // end EventListAdapter()
+        mRatedMovieMap = new HashMap<Movie, Integer>(event.getNumVotesPerUser());
+    } // end MoviesRateListAdapter()
 
     /*
 	 * (non-Javadoc)
@@ -46,7 +63,7 @@ public class MoviesRateListAdapter extends BaseAdapter {
 	 */
     @Override
     public int getCount() {
-        return 3;
+        return mMovieList.size();
     } // end getCount()
 
     /*
@@ -56,7 +73,7 @@ public class MoviesRateListAdapter extends BaseAdapter {
      */
     @Override
     public Object getItem(int position) {
-        return new Object();
+        return mMovieList.get(position);
     } // end getItem()
 
     /*
@@ -66,7 +83,7 @@ public class MoviesRateListAdapter extends BaseAdapter {
      */
     @Override
     public long getItemId(int position) {
-        return position;
+        return mMovieList.get(position).getId();
     } // end getItemId()
 
     /*
@@ -83,20 +100,134 @@ public class MoviesRateListAdapter extends BaseAdapter {
             vi = inflater.inflate(R.layout.list_movie_rate_item, null);
         } // end if
 
-        TextView friendName = (TextView) vi.findViewById(R.id.friendName);
-        switch (position) {
-            case 0:
-                friendName.setText("Pulp Fiction");
-                break;
-            case 1:
-                friendName.setText("El Topo");
-                break;
-            case 2:
-                friendName.setText("The Godfather");
-                break;
-            default:
-        }
+        final Movie movie = mMovieList.get(position);
+
+        TextView title = (TextView) vi.findViewById(R.id.movie_title);
+        ImageView moviePoster = (ImageView) vi.findViewById(R.id.movie_poster);
+        DisplayImageOptions mOptions = new DisplayImageOptions.Builder()
+                .cacheInMemory(true)
+                .showImageOnLoading(android.R.drawable.ic_menu_crop)
+                .showImageForEmptyUri(android.R.drawable.ic_menu_crop)
+                .showImageOnFail(android.R.drawable.ic_menu_crop)
+                .bitmapConfig(Bitmap.Config.RGB_565).build();
+
+        ImageLoader.getInstance().displayImage(movie.getPoster(), moviePoster, mOptions);
+
+        title.setText(movie.getTitle());
+
+
+        final ImageView star1 = (ImageView) vi.findViewById(R.id.movie_star_1);
+        final ImageView star2 = (ImageView) vi.findViewById(R.id.movie_star_2);
+        final ImageView star3 = (ImageView) vi.findViewById(R.id.movie_star_3);
+        final ImageView star4 = (ImageView) vi.findViewById(R.id.movie_star_4);
+        final ImageView star5 = (ImageView) vi.findViewById(R.id.movie_star_5);
+
+        vi.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                star1.setImageResource(android.R.drawable.star_off);
+                star2.setImageResource(android.R.drawable.star_off);
+                star3.setImageResource(android.R.drawable.star_off);
+                star4.setImageResource(android.R.drawable.star_off);
+                star5.setImageResource(android.R.drawable.star_off);
+                mRatedMovieMap.remove(movie);
+            }
+        });
+        star1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+            if (mRatedMovieMap.size() == mEvent.getNumVotesPerUser() && mRatedMovieMap.get(movie) == null) {
+                Toast toast = Toast.makeText(mContext,
+                        "You can only vote for " + mEvent.getNumVotesPerUser() + " movie/s!",
+                        Toast.LENGTH_SHORT);
+                toast.show();
+            } else {
+                star1.setImageResource(android.R.drawable.btn_star_big_on);
+                star2.setImageResource(android.R.drawable.star_off);
+                star3.setImageResource(android.R.drawable.star_off);
+                star4.setImageResource(android.R.drawable.star_off);
+                star5.setImageResource(android.R.drawable.star_off);
+                mRatedMovieMap.put(movie, 1);
+            }
+            }
+        });
+        star2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mRatedMovieMap.size() == mEvent.getNumVotesPerUser() && mRatedMovieMap.get(movie) == null) {
+                    Toast toast = Toast.makeText(mContext,
+                            "You can only vote for " + mEvent.getNumVotesPerUser() + " movie/s!",
+                            Toast.LENGTH_SHORT);
+                    toast.show();
+                } else {
+                    star1.setImageResource(android.R.drawable.btn_star_big_on);
+                    star2.setImageResource(android.R.drawable.btn_star_big_on);
+                    star3.setImageResource(android.R.drawable.star_off);
+                    star4.setImageResource(android.R.drawable.star_off);
+                    star5.setImageResource(android.R.drawable.star_off);
+                    mRatedMovieMap.put(movie, 2);
+                }
+            }
+        });
+        star3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mRatedMovieMap.size() == mEvent.getNumVotesPerUser() && mRatedMovieMap.get(movie) == null) {
+                    Toast toast = Toast.makeText(mContext,
+                            "You can only vote for " + mEvent.getNumVotesPerUser() + " movie/s!",
+                            Toast.LENGTH_SHORT);
+                    toast.show();
+                } else {
+                    star1.setImageResource(android.R.drawable.btn_star_big_on);
+                    star2.setImageResource(android.R.drawable.btn_star_big_on);
+                    star3.setImageResource(android.R.drawable.btn_star_big_on);
+                    star4.setImageResource(android.R.drawable.star_off);
+                    star5.setImageResource(android.R.drawable.star_off);
+                    mRatedMovieMap.put(movie, 3);
+                }
+            }
+        });
+        star4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mRatedMovieMap.size() == mEvent.getNumVotesPerUser() && mRatedMovieMap.get(movie) == null) {
+                    Toast toast = Toast.makeText(mContext,
+                            "You can only vote for " + mEvent.getNumVotesPerUser() + " movie/s!",
+                            Toast.LENGTH_SHORT);
+                    toast.show();
+                } else {
+                    star1.setImageResource(android.R.drawable.btn_star_big_on);
+                    star2.setImageResource(android.R.drawable.btn_star_big_on);
+                    star3.setImageResource(android.R.drawable.btn_star_big_on);
+                    star4.setImageResource(android.R.drawable.btn_star_big_on);
+                    star5.setImageResource(android.R.drawable.star_off);
+                    mRatedMovieMap.put(movie, 4);
+                }
+            }
+        });
+        star5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mRatedMovieMap.size() == mEvent.getNumVotesPerUser() && mRatedMovieMap.get(movie) == null) {
+                    Toast toast = Toast.makeText(mContext,
+                            "You can only vote for " + mEvent.getNumVotesPerUser() + " movie/s!",
+                            Toast.LENGTH_SHORT);
+                    toast.show();
+                } else {
+                    star1.setImageResource(android.R.drawable.btn_star_big_on);
+                    star2.setImageResource(android.R.drawable.btn_star_big_on);
+                    star3.setImageResource(android.R.drawable.btn_star_big_on);
+                    star4.setImageResource(android.R.drawable.btn_star_big_on);
+                    star5.setImageResource(android.R.drawable.btn_star_big_on);
+                    mRatedMovieMap.put(movie, 5);
+                }
+            }
+        });
 
         return vi;
     } // end getView()
+
+    public HashMap<Movie, Integer> getmRatedMovieMap() {
+        return mRatedMovieMap;
+    }
 }

@@ -1,5 +1,5 @@
 /**
- * FriendListAdapter.java
+ * EventListAdapter.java
  *
  * 10.10.2014
  *
@@ -18,7 +18,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.limpidgreen.cinevox.R;
-import com.limpidgreen.cinevox.model.Friend;
+import com.limpidgreen.cinevox.SelectMoviesActivity;
+import com.limpidgreen.cinevox.model.Movie;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
@@ -26,29 +27,40 @@ import java.util.ArrayList;
 
 
 /**
- * Adapter for the Friends List.
+ * Adapter for the Event List.
  *
  * @author MajaDobnik
  *
  */
-public class FriendListAdapter extends BaseAdapter {
+public class MoviesSelectListAdapter extends BaseAdapter {
     private static LayoutInflater inflater = null;
-    private Context mContext;
-    private ArrayList<Friend> mFriendList;
-    private ArrayList<Friend> mSelectedFriendList;
+    private SelectMoviesActivity mContext;
+
+    private ArrayList<Movie> mMovieList;
+    private ArrayList<Movie> mSelectedMovieList;
 
     /**
      * Constructor.
      *
-     * @param context
+     * //@param context
      */
-    public FriendListAdapter(ArrayList<Friend> friendList, ArrayList<Friend> selectedFriendList, Context context) {
-        mContext = context;
-        mFriendList = friendList;
-        mSelectedFriendList = selectedFriendList;
+    public MoviesSelectListAdapter(ArrayList<Movie> movieList, ArrayList<Movie> selectedMovies, Context context) {
+        mContext = (SelectMoviesActivity) context;
+        mMovieList = movieList;
+        mSelectedMovieList = selectedMovies;
         inflater = (LayoutInflater) mContext
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     } // end EventListAdapter()
+
+    /**
+     * Update list.
+     *
+     * @param movies
+     */
+    public void updateList(ArrayList<Movie> movies) {
+        mMovieList = movies;
+        notifyDataSetChanged();
+    } // end updateList()
 
     /*
 	 * (non-Javadoc)
@@ -57,7 +69,7 @@ public class FriendListAdapter extends BaseAdapter {
 	 */
     @Override
     public int getCount() {
-        return mFriendList.size();
+        return mMovieList.size();
     } // end getCount()
 
     /*
@@ -67,7 +79,7 @@ public class FriendListAdapter extends BaseAdapter {
      */
     @Override
     public Object getItem(int position) {
-        return mFriendList.get(position);
+        return mMovieList.get(position);
     } // end getItem()
 
     /*
@@ -77,7 +89,7 @@ public class FriendListAdapter extends BaseAdapter {
      */
     @Override
     public long getItemId(int position) {
-        return mFriendList.get(position).getId();
+        return mMovieList.get(position).getId();
     } // end getItemId()
 
     /*
@@ -88,16 +100,17 @@ public class FriendListAdapter extends BaseAdapter {
      */
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+
         View vi = convertView;
         if (convertView == null) {
-            vi = inflater.inflate(R.layout.list_friend_item, null);
+            vi = inflater.inflate(R.layout.list_movie_select_item, null);
         } // end if
 
-        final Friend friend = mFriendList.get(position);
+        final Movie movie = mMovieList.get(position);
 
-        TextView friendName = (TextView) vi.findViewById(R.id.friendName);
+        TextView title = (TextView) vi.findViewById(R.id.movie_title);
         final ImageView selectIcon = (ImageView) vi.findViewById(R.id.select_icon);
-        ImageView friendImage = (ImageView) vi.findViewById(R.id.friend_image);
+        ImageView moviePoster = (ImageView) vi.findViewById(R.id.movie_poster);
         DisplayImageOptions mOptions = new DisplayImageOptions.Builder()
                 .cacheInMemory(true)
                 .showImageOnLoading(android.R.drawable.ic_menu_crop)
@@ -105,32 +118,32 @@ public class FriendListAdapter extends BaseAdapter {
                 .showImageOnFail(android.R.drawable.ic_menu_crop)
                 .bitmapConfig(Bitmap.Config.RGB_565).build();
 
-        ImageLoader.getInstance().displayImage("http://graph.facebook.com/" + friend.getFacebookUID() + "/picture?type=square&height=150&width=150", friendImage, mOptions);
-        friendName.setText(friend.getName());
+        ImageLoader.getInstance().displayImage(movie.getPoster(), moviePoster, mOptions);
 
-        if (mSelectedFriendList.contains(friend)) {
-            selectIcon.setImageResource(R.drawable.select_big);
+        title.setText(movie.getTitle());
+
+        if (mSelectedMovieList.contains(movie)) {
+            selectIcon.setImageResource(android.R.drawable.btn_minus);
         } else {
-            selectIcon.setImageResource(R.drawable.select_empty);
+            selectIcon.setImageResource(android.R.drawable.ic_menu_add);
         }
 
         vi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mSelectedFriendList.contains(friend)) {
-                    mSelectedFriendList.remove(friend);
-                    selectIcon.setImageResource(R.drawable.select_empty);
+                if (mSelectedMovieList.contains(movie)) {
+                    mSelectedMovieList.remove(movie);
+                    mContext.updateSelectedMoviesList(mSelectedMovieList);
+                    selectIcon.setImageResource(android.R.drawable.ic_menu_add);
                 } else {
-                    mSelectedFriendList.add(friend);
-                    selectIcon.setImageResource(R.drawable.select_big);
+                    mSelectedMovieList.add(movie);
+                    mContext.updateSelectedMoviesList(mSelectedMovieList);
+                    selectIcon.setImageResource(android.R.drawable.btn_minus);
                 }
             }
         });
 
+
         return vi;
     } // end getView()
-
-    public ArrayList<Friend> getmSelectedFriendList() {
-        return mSelectedFriendList;
-    }
 }

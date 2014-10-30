@@ -15,9 +15,11 @@ import android.util.Log;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
@@ -90,8 +92,18 @@ public class Event implements Serializable {
     private RatingPhase ratingPhase;
     @Expose
     private Integer knockoutPhase;
+    @Expose
+    private EventStatus eventStatus;
 
     private ArrayList<Friend> friendList;
+
+    private ArrayList<Friend> friendAcceptedList;
+
+    private ArrayList<Friend> friendDeclinedList;
+
+    private ArrayList<Movie> movieList;
+
+    private Movie winner;
 
     public Event() {
         super();
@@ -112,9 +124,12 @@ public class Event implements Serializable {
         this.knockoutRounds = 5;
         this.knockoutTimeLimit = 15;
         this.waitTimeLimit = true;
-        this.ratingPhase = RatingPhase.STARTING;
         this.knockoutPhase = 0;
         this.friendList = new ArrayList<Friend>();
+        this.friendAcceptedList = new ArrayList<Friend>();
+        this.friendDeclinedList = new ArrayList<Friend>();
+        this.movieList = new ArrayList<Movie>();
+        this.winner = null;
     }
 
     public Event(Integer id, String name, String description,
@@ -137,7 +152,8 @@ public class Event implements Serializable {
              Date updatedAt,
              Date createdAt,
              RatingPhase ratingPhase,
-             Integer knockoutPhase) {
+             Integer knockoutPhase,
+             EventStatus eventStatus) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -161,6 +177,12 @@ public class Event implements Serializable {
         this.createdAt = createdAt;
         this.ratingPhase = ratingPhase;
         this.knockoutPhase = knockoutPhase;
+        this.eventStatus = eventStatus;
+        this.movieList = new ArrayList<Movie>();
+        this.friendList = new ArrayList<Friend>();
+        this.friendAcceptedList = new ArrayList<Friend>();
+        this.friendDeclinedList = new ArrayList<Friend>();
+        this.winner = null;
     }
 
     /**
@@ -196,6 +218,7 @@ public class Event implements Serializable {
         values.put(CineVoxDBHelper.EVENTS_COL_CRATED_AT, createdAt.toString());
         values.put(CineVoxDBHelper.EVENTS_COL_RATING_PHASE, ratingPhase.ordinal());
         values.put(CineVoxDBHelper.EVENTS_COL_KNOCKOUT_PHASE, knockoutRounds);
+        values.put(CineVoxDBHelper.EVENTS_COL_EVENT_STATUS, eventStatus.ordinal());
         return values;
     }
 
@@ -235,8 +258,9 @@ public class Event implements Serializable {
         Boolean waitTimeLimit = (curEvent.getInt(curEvent.getColumnIndex(CineVoxDBHelper.EVENTS_COL_WAIT_TIME_LIMIT)) == 1)? true : false;
         RatingPhase ratingPhase = RatingPhase.fromInteger(curEvent.getInt(curEvent.getColumnIndex(CineVoxDBHelper.EVENTS_COL_RATING_PHASE)));
         Integer knockoutPhase = curEvent.getInt(curEvent.getColumnIndex(CineVoxDBHelper.EVENTS_COL_KNOCKOUT_PHASE));
+        EventStatus eventStatus = EventStatus.fromInteger(curEvent.getInt(curEvent.getColumnIndex(CineVoxDBHelper.EVENTS_COL_EVENT_STATUS)));
 
-        return new Event(id, name, description, eventDate, eventTime, timeLimit,place, minimumVotingPercent, userId, finished, usersCanAddMovies, numAddMoviesByUser, ratingSystem, numVotesPerUser, votingRange, tieKnockout, knockoutRounds, knockoutTimeLimit, waitTimeLimit, updatedAt, createdAt, ratingPhase, knockoutPhase);
+        return new Event(id, name, description, eventDate, eventTime, timeLimit,place, minimumVotingPercent, userId, finished, usersCanAddMovies, numAddMoviesByUser, ratingSystem, numVotesPerUser, votingRange, tieKnockout, knockoutRounds, knockoutTimeLimit, waitTimeLimit, updatedAt, createdAt, ratingPhase, knockoutPhase, eventStatus);
     }
 
     @Override
@@ -250,6 +274,33 @@ public class Event implements Serializable {
         if (!name.equals(event.name)) return false;
         if (!id.equals(event.id)) return false;
         if (!updatedAt.equals(event.updatedAt)) return false;
+        if (eventStatus.ordinal() != event.eventStatus.ordinal()) return false;
+
+        Log.i(Constants.TAG, "THIS WINNER: " + winner);
+        Log.i(Constants.TAG, "OTHER WINNER: " + event.winner);
+        if (winner != null ? !winner.getId().equals(event.winner != null ? event.winner.getId() : null) : event.winner != null)
+            return false;
+
+        if (friendList.size() != event.friendList.size()) return false;
+        for (Friend friend : friendList) {
+            if (!event.friendList.contains(friend)) return false;
+        } // end for
+
+        if (friendAcceptedList.size() != event.friendAcceptedList.size()) return false;
+        for (Friend friend : friendAcceptedList) {
+            if (!event.friendAcceptedList.contains(friend)) return false;
+        } // end for
+
+        if (friendDeclinedList.size() != event.friendDeclinedList.size()) return false;
+        for (Friend friend : friendDeclinedList) {
+            if (!event.friendDeclinedList.contains(friend)) return false;
+        } // end for
+
+        if (movieList.size() != event.movieList.size()) return false;
+        for (Movie movie : movieList) {
+            if (!event.movieList.contains(movie)) return false;
+        } // end for
+
         return true;
     }
 
@@ -286,6 +337,12 @@ public class Event implements Serializable {
                 ", createdAt=" + createdAt +
                 ", ratingPhase=" + ratingPhase +
                 ", knockoutPhase=" + knockoutPhase +
+                ", eventStatus=" + eventStatus +
+                ", winner=" + winner +
+                ", friendList=" + friendList +
+                ", friendAcceptedList=" + friendAcceptedList +
+                ", friendDeclinedList=" + friendDeclinedList +
+                ", movieList=" + movieList +
                 '}';
     }
 
@@ -481,6 +538,46 @@ public class Event implements Serializable {
         this.friendList = friendList;
     }
 
+    public ArrayList<Movie> getMovieList() {
+        return movieList;
+    }
+
+    public void setMovieList(ArrayList<Movie> movieList) {
+        this.movieList = movieList;
+    }
+
+    public EventStatus getEventStatus() {
+        return eventStatus;
+    }
+
+    public void setEventStatus(EventStatus eventStatus) {
+        this.eventStatus = eventStatus;
+    }
+
+    public ArrayList<Friend> getFriendAcceptedList() {
+        return friendAcceptedList;
+    }
+
+    public void setFriendAcceptedList(ArrayList<Friend> friendAcceptedList) {
+        this.friendAcceptedList = friendAcceptedList;
+    }
+
+    public ArrayList<Friend> getFriendDeclinedList() {
+        return friendDeclinedList;
+    }
+
+    public void setFriendDeclinedList(ArrayList<Friend> friendDeclinedList) {
+        this.friendDeclinedList = friendDeclinedList;
+    }
+
+    public Movie getWinner() {
+        return winner;
+    }
+
+    public void setWinner(Movie winner) {
+        this.winner = winner;
+    }
+
     public static class EventDeserializer implements JsonDeserializer<Event> {
         @Override
         public Event deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
@@ -490,12 +587,54 @@ public class Event implements Serializable {
                     .create();
             Event event = gson.fromJson(json, Event.class);
 
-            Log.i(Constants.TAG, "JSON DESERIALIZE OBJECT:" +  event.toString());
+            //Log.i(Constants.TAG, "JSON DESERIALIZE OBJECT:" +  event.toString());
             String a = json.getAsJsonObject().get("event_date").getAsString();
             String b = json.getAsJsonObject().get("event_time").getAsString();
 
             SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd");
             SimpleDateFormat sdfDateWithTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+            Integer winnerMovieId = !json.getAsJsonObject().get("winner_movie").isJsonNull() ? json.getAsJsonObject().get("winner_movie").getAsInt() : null;
+
+            JsonArray movies = json.getAsJsonObject().get("movies").getAsJsonArray();
+            ArrayList<Movie> movieList = new ArrayList<Movie>(movies.size());
+            for (JsonElement movieJson : movies) {
+                Movie movie = new Gson().fromJson(movieJson, Movie.class);
+                //Log.i(Constants.TAG, "MOVIES OBJECT:" + movie.toString());
+                movieList.add(movie);
+
+                if (movie.getId().equals(winnerMovieId)) {
+                    Log.i(Constants.TAG, "MOVIES WINNER:" +  movie);
+                    event.setWinner(movie);
+                } // end if
+            } // end for
+
+            event.setMovieList(movieList);
+
+            JsonArray friends = json.getAsJsonObject().get("friends").getAsJsonArray();
+            ArrayList<Friend> friendList = new ArrayList<Friend>();
+            ArrayList<Friend> friendAcceptedList = new ArrayList<Friend>();
+            ArrayList<Friend> friendDeclinedList = new ArrayList<Friend>();
+            //Log.i(Constants.TAG, "JSON FRIENDS OBJECT:" + friends.toString());
+            for (JsonElement friendJson : friends) {
+                Friend friend = new Gson().fromJson(friendJson, Friend.class);
+                friend.setFacebookUID(friendJson.getAsJsonObject().get("fb_uid").getAsString());
+                String eventAccepted = friendJson.getAsJsonObject().get("event_accepted").getAsString();
+
+                if (eventAccepted.equals("waiting")) {
+                    friendList.add(friend);
+                } else if (eventAccepted.equals("accepted")) {
+                    friendAcceptedList.add(friend);
+                } else if (eventAccepted.equals("declined")) {
+                    friendDeclinedList.add(friend);
+                } // end if-else
+
+                //Log.i(Constants.TAG, "FRIEND OBJECT:" + friend.toString());
+            } // end for
+
+            event.setFriendList(friendList);
+            event.setFriendAcceptedList(friendAcceptedList);
+            event.setFriendDeclinedList(friendDeclinedList);
 
             Date date;
             Time time;
@@ -518,19 +657,20 @@ public class Event implements Serializable {
         }
     }
 
-    public static class Serializer implements JsonSerializer<Event> {
+    public static class EventSerializer implements JsonSerializer<Event> {
         @Override
         public JsonElement serialize(Event src, Type typeOfSrc, JsonSerializationContext context) {
-            Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation()
-                    .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            Gson gson = new GsonBuilder()
+                    .excludeFieldsWithoutExposeAnnotation()
+                    .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                     .create();
 
-            //JsonObject jsonObject = new JsonObject();
-            //jsonObject.add("event", gson.toJsonTree(src));
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.add("event", gson.toJsonTree(src));
+            jsonObject.getAsJsonObject("event").addProperty("event_time", src.getTime().toString());
+            jsonObject.getAsJsonObject("event").addProperty("event_date", src.getDate().toString());
 
-            JsonElement jsonElement = gson.toJsonTree(src);
-          //  jsonElement.getAsJsonObject().a
-            return jsonElement;
+            return jsonObject;
         }
 
     }

@@ -17,7 +17,10 @@ import android.view.View;
 import android.widget.ListView;
 
 import com.limpidgreen.cinevox.adapters.MoviesBarListAdapter;
-import com.limpidgreen.cinevox.adapters.MoviesListAdapter;
+import com.limpidgreen.cinevox.adapters.MoviesSelectListAdapter;
+import com.limpidgreen.cinevox.model.Movie;
+
+import java.util.ArrayList;
 
 import it.sephiroth.android.library.widget.HListView;
 
@@ -41,11 +44,11 @@ public class AddMoviesToEventActivity extends Activity {
         setContentView(R.layout.activity_add_movies_to_event);
 
         HListView list = (HListView) findViewById(R.id.listMoviesBar);
-        MoviesBarListAdapter adapter = new MoviesBarListAdapter(this);
+        MoviesBarListAdapter adapter = new MoviesBarListAdapter(new ArrayList<Movie>(), this);
         list.setAdapter(adapter);
 
         ListView listMovies = (ListView) findViewById(R.id.listMovies);
-        MoviesListAdapter adapterMovies = new MoviesListAdapter(this);
+        MoviesSelectListAdapter adapterMovies = new MoviesSelectListAdapter(new ArrayList<Movie>(), new ArrayList<Movie>(), this);
         listMovies.setAdapter(adapterMovies);
     }
 

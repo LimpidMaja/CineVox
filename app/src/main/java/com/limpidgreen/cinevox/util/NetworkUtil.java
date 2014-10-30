@@ -17,14 +17,17 @@ import android.util.Log;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
 import com.limpidgreen.cinevox.exception.APICallException;
 import com.limpidgreen.cinevox.model.Event;
 import com.limpidgreen.cinevox.model.Friend;
+import com.limpidgreen.cinevox.model.Movie;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -37,6 +40,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -56,6 +60,8 @@ import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -77,6 +83,9 @@ public class NetworkUtil {
     public static final String PARAM_ACCESS_TOKEN_EXPIRES = "expires_at";
     /** POST parameter name for result's info data */
     public static final String PARAM_INFO = "info";
+    /** GET parameter name for search term */
+    public static final String PARAM_TERM = "term";
+
 
     /** Request timeout */
     public static final int HTTP_REQUEST_TIMEOUT_MS = 30 * 1000;
@@ -89,8 +98,16 @@ public class NetworkUtil {
 
     /** URI for events */
     public static final String EVENTS_URI = BASE_URL + "/api/events";
+    /** URI for events confirm */
+    public static final String EVENTS_CONFIRM_URI = "/confirm";
+    /** URI for events movies vote */
+    public static final String EVENTS_VOTE_URI = "/vote";
     /** URI for friends */
     public static final String FRIENDS_URI = BASE_URL + "/api/friends";
+    /** URI for movies */
+    public static final String MOVIES_URI = BASE_URL + "/api/movies";
+    /** URI for movies search */
+    public static final String MOVIES_SEARCH_URI = MOVIES_URI + "/autocomplete";
 
     /**
      * Returns true if the Internet connection is available.
@@ -169,7 +186,7 @@ public class NetworkUtil {
      * @return list of events
      */
     public static ArrayList<Event> getEvents(String accessToken) {
-        final HttpParams params = new BasicHttpParams();
+        final ArrayList<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
         try {
             JsonObject eventsJson =  getWebService(params, EVENTS_URI, accessToken).getAsJsonObject();
             Log.i(Constants.TAG, "RESULT: " + eventsJson.toString());
@@ -196,13 +213,102 @@ public class NetworkUtil {
     } // end getEvents()
 
     /**
+     * Connects to server, confirms to join event.
+     *
+     * @param accessToken
+     * @param join
+     * @return flag if successful
+     */
+    public static Event confirmEventJoin(String accessToken, Integer eventId, Boolean join) {
+        JsonObject jsonObject = new JsonObject();
+
+        jsonObject.addProperty("accept", join);
+        jsonObject.add("event", new JsonObject());
+        Log.i(Constants.TAG, "jsonObject:" +  jsonObject.toString());
+
+        try {
+            JsonElement element = NetworkUtil.postWebService(jsonObject, NetworkUtil.EVENTS_URI + "/" + eventId + EVENTS_CONFIRM_URI, accessToken);
+            Log.i(Constants.TAG, "result:" + element.toString());
+            if (element != null) {
+                GsonBuilder jsonBuilder = new GsonBuilder();
+                jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                Gson gson = jsonBuilder.create();
+
+                Log.i(Constants.TAG, "RETURNED : jsonObject:" +  element.getAsJsonObject().get("event").toString());
+                Event event = gson.fromJson(
+                        element.getAsJsonObject().get("event"),
+                        Event.class
+                );
+                return event;
+            } else {
+                return null;
+            }
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when confirming event - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when confirming event", e);
+            return null;
+        } // end try-catch
+    } // end confirmEventJoin()
+
+    /**
+     * Connects to server, votes for movies.
+     *
+     * @param accessToken
+     * @param eventId
+     * @param ratedMoviesMap
+     * @return event
+     */
+    public static Event voteEventMovies(String accessToken, Integer eventId, HashMap<Movie, Integer> ratedMoviesMap) {
+        JsonObject jsonObject = new JsonObject();
+
+        jsonObject.add("event", new JsonObject());
+        JsonArray array = new JsonArray();
+        for (Movie movie : ratedMoviesMap.keySet()) {
+            JsonObject movieJson = new JsonObject();
+            movieJson.addProperty("id", movie.getId());
+            movieJson.addProperty("score", ratedMoviesMap.get(movie));
+            array.add(movieJson);
+        }
+        jsonObject.add("rated_movies", array);
+
+        Log.i(Constants.TAG, "jsonObject:" +  jsonObject.toString());
+
+        try {
+            JsonElement element = NetworkUtil.postWebService(jsonObject, NetworkUtil.EVENTS_URI + "/" + eventId + EVENTS_VOTE_URI, accessToken);
+            Log.i(Constants.TAG, "result:" +  element.toString());
+            if (element != null) {
+                GsonBuilder jsonBuilder = new GsonBuilder();
+                jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                Gson gson = jsonBuilder.create();
+
+                Log.i(Constants.TAG, "RETURNED : jsonObject:" +  element.getAsJsonObject().get("event").toString());
+                Event event = gson.fromJson(
+                        element.getAsJsonObject().get("event"),
+                        Event.class
+                );
+                return event;
+            } else {
+                return null;
+            }
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when voting event movies - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when voting event movies", e);
+            return null;
+        } // end try-catch
+    } // end voteEventMovies()
+
+    /**
      * Connects to server, returns friends.
      *
      * @param accessToken
      * @return list of friends
      */
     public static ArrayList<Friend> getFriends(String accessToken) {
-        final HttpParams params = new BasicHttpParams();
+        final ArrayList<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
         try {
             JsonObject friendsJson =  getWebService(params, FRIENDS_URI, accessToken).getAsJsonObject();
             Log.i(Constants.TAG, "FRIENDS RESULT: " + friendsJson.toString());
@@ -224,6 +330,42 @@ public class NetworkUtil {
             return null;
         } catch (IOException e) {
             Log.e(Constants.TAG, "IOException when getting friends", e);
+            return null;
+        } // end try-catch
+    } // end getFriends()
+
+    /**
+     * Connects to server, returns movies by title.
+     *
+     * @param accessToken
+     * @return list of movies
+     */
+    public static ArrayList<Movie> getMoviesBySearch(String accessToken, String term) {
+        final ArrayList<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+        params.add(new BasicNameValuePair(PARAM_TERM, term));
+        try {
+
+            Log.i(Constants.TAG, "MOVIES URI: " + MOVIES_SEARCH_URI);
+            JsonObject moviesJson =  getWebService(params, MOVIES_SEARCH_URI, accessToken).getAsJsonObject();
+            Log.i(Constants.TAG, "MOVIES RESULT: " + moviesJson.toString());
+            if (moviesJson != null) {
+                Gson gson = new GsonBuilder()
+                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                        .create();
+
+                ArrayList<Movie> movieList = gson.fromJson(
+                        moviesJson.get("movies"),
+                        new TypeToken<ArrayList<Movie>>() {
+                        }.getType());
+                return movieList;
+            } else {
+                return null;
+            } // end if-else
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when searching movies - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when searching movies", e);
             return null;
         } // end try-catch
     } // end getFriends()
@@ -341,19 +483,24 @@ public class NetworkUtil {
      * @param url
      * @return server result as JSON Element
      */
-    public static JsonElement getWebService(HttpParams params, String url, String accessToken) throws APICallException, IOException {
+    public static JsonElement getWebService(ArrayList<BasicNameValuePair> params, String url, String accessToken) throws APICallException, IOException {
         StringBuilder builder = new StringBuilder();
         JsonElement jsonElement;
         HttpClient client = new DefaultHttpClient();
-        final HttpGet httpGet = new HttpGet(url);
+        final HttpGet httpGet;
 
         if (params != null) {
-            httpGet.setParams(params);
+            String paramString = URLEncodedUtils.format(params, "utf-8");
+            Log.i(Constants.TAG, "PARAMS " + paramString);
+            httpGet = new HttpGet(url + "?" + paramString);
+        } else {
+           httpGet = new HttpGet(url);
         } // end if
+
         Log.i(Constants.TAG, "URL " + httpGet.getURI());
 
         if (accessToken != null) {
-            Log.i(Constants.TAG, "ADD TOKEN");
+            Log.i(Constants.TAG, "ADD TOKEN:" + accessToken);
             httpGet.setHeader("Authorization", "Token token=" + accessToken );
         } // end if
         try {

@@ -17,11 +17,14 @@ import com.google.gson.annotations.SerializedName;
  *
  */
 public enum RatingPhase {
+    @SerializedName("wait_users")
+    WAIT_USERS(0, "wait_users"),
+
     @SerializedName("starting")
-    STARTING(0, "starting"),
+    STARTING(1, "starting"),
 
     @SerializedName("knockout_match")
-    KNOCKOUT_MATCH(1, "knockout_match");
+    KNOCKOUT_MATCH(2, "knockout_match");
 
     private String type;
     private Integer id;
@@ -49,8 +52,10 @@ public enum RatingPhase {
     public static RatingPhase fromInteger(int x) {
         switch(x) {
             case 0:
-                return STARTING;
+                return WAIT_USERS;
             case 1:
+                return STARTING;
+            case 2:
                 return KNOCKOUT_MATCH;
         }
         return null;

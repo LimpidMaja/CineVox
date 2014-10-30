@@ -183,4 +183,14 @@ public class Friend implements Serializable, Parcelable {
     public void setFacebookUID(String facebookUID) {
         this.facebookUID = facebookUID;
     }
+
+    @Override
+    public String toString() {
+        return "Friend{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", username='" + username + '\'' +
+                ", facebookUID='" + facebookUID + '\'' +
+                '}';
+    }
 }

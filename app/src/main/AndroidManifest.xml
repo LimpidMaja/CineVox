@@ -119,11 +119,13 @@
         <activity
             android:name=".SelectFriendsActivity"
             android:label="@string/invite_friends"
+            android:windowSoftInputMode="adjustPan"
             android:theme="@android:style/Theme.Light.NoTitleBar" >
         </activity>
         <activity
             android:name=".SelectMoviesActivity"
             android:label="@string/select_movies"
+            android:windowSoftInputMode="adjustPan"
             android:theme="@android:style/Theme.Light.NoTitleBar" >
         </activity>
         <activity
@@ -136,6 +138,10 @@
             android:label="@string/event_details"
             android:theme="@android:style/Theme.Light.NoTitleBar" >
         </activity>
+        <service
+            android:name=".util.ConfirmEventService"
+            android:label="Confirm Event Service" >
+        </service>
         <activity
             android:name=".AddMoviesToEventActivity"
             android:label="@string/event_details"

@@ -25,6 +25,8 @@ import com.limpidgreen.cinevox.R;
 import com.limpidgreen.cinevox.RateMoviesActivity;
 import com.limpidgreen.cinevox.WinnerActivity;
 import com.limpidgreen.cinevox.model.Event;
+import com.limpidgreen.cinevox.model.EventStatus;
+import com.limpidgreen.cinevox.util.Constants;
 
 import java.util.ArrayList;
 
@@ -104,7 +106,7 @@ public class EventListAdapter extends BaseAdapter {
         if (convertView == null) {
             vi = inflater.inflate(R.layout.list_event_item, null);
         } // end if
-        Event event = mEventList.get(position);
+        final Event event = mEventList.get(position);
 
         TextView name = (TextView) vi.findViewById(R.id.eventName);
         TextView place = (TextView) vi.findViewById(R.id.eventPlace);
@@ -116,57 +118,84 @@ public class EventListAdapter extends BaseAdapter {
         date.setText(event.getDate().toString());
         time.setText(event.getTime().toString());
 
-        Button eventStatus = (Button) vi.findViewById(R.id.event_status_button);
-        switch (position) {
-            case 0:
-                eventStatus.setText("Finished");
-                eventStatus.setOnClickListener(new View.OnClickListener() {
+        Button eventStatusButton = (Button) vi.findViewById(R.id.event_status_button);
+
+        EventStatus status = event.getEventStatus();
+
+        switch (status) {
+            case WAITING_OTHERS:
+                eventStatusButton.setText("Waiting for others");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(mContext, EventActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
                         mContext.startActivity(intent);
                     }
                 });
                 break;
-            case 1:
-                eventStatus.setText("Add Movies");
-                eventStatus.setOnClickListener(new View.OnClickListener() {
+            case CONFIRM:
+                eventStatusButton.setText("Confirm");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(mContext, EventActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
+                        mContext.startActivity(intent);
+                    }
+                });
+                break;
+            case ADD_MOVIES:
+                eventStatusButton.setText("Add Movies");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(mContext, AddMoviesToEventActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
                         mContext.startActivity(intent);
                     }
                 });
                 break;
-            case 2:
-                eventStatus.setText("Vote!");
-                eventStatus.setOnClickListener(new View.OnClickListener() {
+            case VOTE:
+                eventStatusButton.setText("Vote!");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(mContext, RateMoviesActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
                         mContext.startActivity(intent);
                     }
                 });
                 break;
-            case 3:
-                eventStatus.setText("Waiting for others");
-                break;
-            case 4:
-                eventStatus.setText("Knockout!");
-                eventStatus.setOnClickListener(new View.OnClickListener() {
+            case KNOCKOUT_CHOOSE:
+                eventStatusButton.setText("Knockout!");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(mContext, MoviesKnockoutActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
                         mContext.startActivity(intent);
                     }
                 });
                 break;
-            case 5:
-                eventStatus.setText("Winner!");
-                eventStatus.setOnClickListener(new View.OnClickListener() {
+            case WINNER:
+                eventStatusButton.setText("Winner!");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         Intent intent = new Intent(mContext, WinnerActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
+                        mContext.startActivity(intent);
+                    }
+                });
+                break;
+            case FINISHED:
+                eventStatusButton.setText("Finished");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(mContext, EventActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
                         mContext.startActivity(intent);
                     }
                 });
@@ -179,6 +208,7 @@ public class EventListAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(mContext, EventActivity.class);
+                intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
                 mContext.startActivity(intent);
             }
         });

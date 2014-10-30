@@ -16,13 +16,29 @@
         android:paddingTop="15dp"
         android:paddingBottom="15dp">
 
-        <TextView
-            android:text="Oscar Party"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:textColor="#ffffff"
-            android:textSize="20sp"/>
+            android:gravity="center"
+            android:orientation="vertical">
+            <TextView
+                android:text="Oscar Party"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#ffffff"
+                android:textSize="20sp"/>
+            <TextView
+                android:id="@+id/rate_text"
+                android:layout_marginTop="3dp"
+                android:text="Rate 2 different Movies from 1 to 5"
+                android:layout_width="wrap_content"
+                android:gravity="center"
+                android:layout_height="wrap_content"
+                android:textColor="#ffffff"
+                android:textSize="15sp"/>
+
+        </LinearLayout>
 
     </RelativeLayout>
 
@@ -55,6 +71,7 @@
             android:padding="5dp"
             android:background="#f23421"
             android:textColor="#ffffff"
+            android:onClick="handleVoteClick"
             android:textSize="40sp"
             android:layout_alignParentBottom="true"/>
 

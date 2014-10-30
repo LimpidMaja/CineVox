@@ -1,5 +1,5 @@
 /**
- * EventListAdapter.java
+ * MoviesBarListAdapter.java
  *
  * 10.10.2014
  *
@@ -9,6 +9,7 @@
 package com.limpidgreen.cinevox.adapters;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,10 +19,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.limpidgreen.cinevox.R;
+import com.limpidgreen.cinevox.model.Movie;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+
+import java.util.ArrayList;
 
 
 /**
- * Adapter for the Event List.
+ * Adapter for the Movie Bar List.
  *
  * @author MajaDobnik
  *
@@ -30,16 +36,29 @@ public class MoviesBarListAdapter extends BaseAdapter {
     private static LayoutInflater inflater = null;
     private Context mContext;
 
+    private ArrayList<Movie> mMovieList;
+
     /**
      * Constructor.
      *
      * //@param context
      */
-    public MoviesBarListAdapter(/*ArrayList<Event> eventList,*/ Context context) {
+    public MoviesBarListAdapter(ArrayList<Movie> movieList, Context context) {
         mContext = context;
+        mMovieList = movieList;
         inflater = (LayoutInflater) mContext
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-    } // end EventListAdapter()
+    } // end MoviesBarListAdapter()
+
+    /**
+     * Update list.
+     *
+     * @param movies
+     */
+    public void updateList(ArrayList<Movie> movies) {
+        mMovieList = movies;
+        notifyDataSetChanged();
+    } // end updateList()
 
     /*
 	 * (non-Javadoc)
@@ -48,7 +67,7 @@ public class MoviesBarListAdapter extends BaseAdapter {
 	 */
     @Override
     public int getCount() {
-        return 3;
+        return mMovieList.size();
     } // end getCount()
 
     /*
@@ -58,7 +77,7 @@ public class MoviesBarListAdapter extends BaseAdapter {
      */
     @Override
     public Object getItem(int position) {
-        return new Object();
+        return mMovieList.get(position);
     } // end getItem()
 
     /*
@@ -68,7 +87,7 @@ public class MoviesBarListAdapter extends BaseAdapter {
      */
     @Override
     public long getItemId(int position) {
-        return position;
+        return mMovieList.get(position).getId();
     } // end getItemId()
 
     /*
@@ -85,19 +104,20 @@ public class MoviesBarListAdapter extends BaseAdapter {
             vi = inflater.inflate(R.layout.list_movie_bar_item, null);
         } // end if
 
-        TextView friendName = (TextView) vi.findViewById(R.id.friendName);
-        switch (position) {
-            case 0:
-                friendName.setText("Pulp Fiction");
-                break;
-            case 1:
-                friendName.setText("El Topo");
-                break;
-            case 2:
-                friendName.setText("The Godfather");
-                break;
-            default:
-        }
+        Movie movie = mMovieList.get(position);
+
+        TextView title = (TextView) vi.findViewById(R.id.movie_title_bar);
+        ImageView moviePoster = (ImageView) vi.findViewById(R.id.movie_poster_bar);
+        DisplayImageOptions mOptions = new DisplayImageOptions.Builder()
+                .cacheInMemory(true)
+                .showImageOnLoading(android.R.drawable.ic_menu_crop)
+                .showImageForEmptyUri(android.R.drawable.ic_menu_crop)
+                .showImageOnFail(android.R.drawable.ic_menu_crop)
+                .bitmapConfig(Bitmap.Config.RGB_565).build();
+
+        ImageLoader.getInstance().displayImage(movie.getPoster(), moviePoster, mOptions);
+
+        title.setText(movie.getTitle());
 
         return vi;
     } // end getView()

@@ -16,16 +16,20 @@ import android.accounts.OperationCanceledException;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentProviderOperation;
-import android.content.ContentValues;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.SyncResult;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 
 import com.limpidgreen.cinevox.dao.CineVoxDBHelper;
 import com.limpidgreen.cinevox.dao.EventsContentProvider;
+import com.limpidgreen.cinevox.dao.FriendsContentProvider;
 import com.limpidgreen.cinevox.model.Event;
+import com.limpidgreen.cinevox.model.Friend;
+import com.limpidgreen.cinevox.model.Movie;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.NetworkUtil;
 
@@ -78,16 +82,69 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
             Cursor curEvents = provider.query(EventsContentProvider.CONTENT_URI, null, null, null, null);
             if (curEvents != null) {
                 while (curEvents.moveToNext()) {
-                    localEvents.add(Event.fromCursor(curEvents));
+                    Event event = Event.fromCursor(curEvents);
+
+                    Uri EVENT_FRIENDS_CONTENT_URI = Uri.parse("content://" + EventsContentProvider.AUTHORITY + "/events/" + event.getId() + "/friends" );
+                    Cursor curFriends = provider.query(EVENT_FRIENDS_CONTENT_URI, null, null, null, null);
+
+                    if (curFriends != null) {
+                        while (curFriends.moveToNext()) {
+                            Friend friend = Friend.fromCursor(curFriends);
+
+                            Integer eventAccepted = curFriends.getInt(curFriends.getColumnIndex(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT));
+                            if (eventAccepted == 0) {
+                                event.getFriendList().add(friend);
+                            } else if (eventAccepted == 1) {
+                                event.getFriendAcceptedList().add(friend);
+                            } else if (eventAccepted == 2) {
+                                event.getFriendDeclinedList().add(friend);
+                            } // end if-else
+                        }
+                        curFriends.close();
+                    } // end if
+
+                    Uri EVENT_MOVIES_CONTENT_URI = Uri.parse("content://" + EventsContentProvider.AUTHORITY + "/events/" + event.getId() + "/movies" );
+                    Cursor curMovies = provider.query(EVENT_MOVIES_CONTENT_URI, null, null, null, null);
+
+                    Log.d(Constants.TAG, TAG + "> curMovies: " + curMovies.getCount());
+                    if (curMovies != null) {
+                        while (curMovies.moveToNext()) {
+                            Movie movie = Movie.fromCursor(curMovies);
+
+                            Integer winnerMovie = curMovies.getInt(curMovies.getColumnIndex(CineVoxDBHelper.EVENT_MOVIES_COL_WINNER));
+                            Log.d(Constants.TAG, TAG + "> MOVIE winnerMovieId: " + winnerMovie);
+                            if (winnerMovie != null && winnerMovie == 1) {
+                                event.setWinner(movie);
+                                Log.d(Constants.TAG, TAG + "> MOVIE WINNER: " + movie);
+                            } // end if
+
+                            event.getMovieList().add(movie);
+                            Log.d(Constants.TAG, TAG + "> MOVIE: " + movie);
+                        }
+                        curMovies.close();
+                    } // end if
+
+                    localEvents.add(event);
                 }
                 curEvents.close();
             }
 
             // See what Remote events are missing on Local
             ArrayList<Event> eventsToLocal = new ArrayList<Event>();
+            ArrayList<Event> eventsToUpdate = new ArrayList<Event>();
             for (Event remoteEvent : remoteEvents) {
                 if (!localEvents.contains(remoteEvent)) {
-                    eventsToLocal.add(remoteEvent);
+                    boolean found = false;
+                    for (Event localEvent : localEvents) {
+                        if (localEvent.getId().equals(remoteEvent.getId())) {
+                            found = true;
+                            eventsToUpdate.add(remoteEvent);
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        eventsToLocal.add(remoteEvent);
+                    }
                 }
             }
 
@@ -95,25 +152,201 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
             ArrayList<Event> eventsToDelete = new ArrayList<Event>();
             for (Event localEvent : localEvents) {
                 if (!remoteEvents.contains(localEvent)) {
-                    eventsToDelete.add(localEvent);
+                    boolean found = false;
+                    for (Event remoteEvent : remoteEvents) {
+                        if (localEvent.getId().equals(remoteEvent.getId())) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        eventsToDelete.add(localEvent);
+                    }
                 }
             }
 
-            if (eventsToLocal.size() == 0 && eventsToDelete.size() == 0) {
+            if (eventsToLocal.size() == 0 && eventsToDelete.size() == 0 && eventsToUpdate.size() == 0) {
                 Log.d(Constants.TAG, TAG + "> No server changes to update local database");
             } else {
                 Log.d(Constants.TAG, TAG + "> Updating local database with remote changes");
 
-                // Updating local events
+                // Inserting local events
                 if (eventsToLocal.size() != 0) {
-                    int i = 0;
-                    ContentValues eventsToLocalValues[] = new ContentValues[eventsToLocal.size()];
+                    final ArrayList<ContentProviderOperation> batch = new ArrayList<ContentProviderOperation>();
                     for (Event localEvent : eventsToLocal) {
-                        Log.d(Constants.TAG, TAG + "> Remote -> Local [" + localEvent.getName() + " date: " + localEvent.getDate() + " TIME: " + localEvent.getTime() + "]");
-                        eventsToLocalValues[i++] = localEvent.getContentValues();
-                    }
 
-                    provider.bulkInsert(EventsContentProvider.CONTENT_URI, eventsToLocalValues);
+                        final ContentProviderOperation.Builder builder = ContentProviderOperation
+                                .newInsert(EventsContentProvider.CONTENT_URI);
+                        builder.withValues(localEvent.getContentValues());
+                        batch.add(builder.build());
+
+                        ArrayList<Friend> allFriends = new ArrayList<Friend>();
+                        allFriends.addAll(localEvent.getFriendList());
+                        allFriends.addAll(localEvent.getFriendAcceptedList());
+                        allFriends.addAll(localEvent.getFriendDeclinedList());
+
+                        for (Friend friend : allFriends) {
+                            Friend localFriend = null;
+                            Cursor curFriend = provider.query(ContentUris.withAppendedId(EventsContentProvider.FRIENDS_CONTENT_URI, friend.getId()), null, null, null, null);
+                            Log.d(Constants.TAG, TAG + "> cur friend:" + curFriend);
+                            if (curFriend != null) {
+                                while (curFriend.moveToNext()) {
+                                    localFriend = Friend.fromCursor(curFriend);
+                                }
+                                curFriend.close();
+                            } // end if
+
+                            if (localFriend == null) {
+                                final ContentProviderOperation.Builder friendBuilder = ContentProviderOperation
+                                        .newInsert(EventsContentProvider.FRIENDS_CONTENT_URI);
+                                friendBuilder.withValues(friend.getContentValues());
+                                batch.add(friendBuilder.build());
+                            }
+
+                            if (localEvent.getFriendList().contains(localFriend)) {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
+                                        .appendPath(FriendsContentProvider.PATH).build())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 0)
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
+                            } else if (localEvent.getFriendAcceptedList().contains(localFriend)) {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
+                                    .appendPath(FriendsContentProvider.PATH).build())
+                                    .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
+                                    .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 1)
+                                    .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
+                            } else if (localEvent.getFriendDeclinedList().contains(localFriend)) {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
+                                        .appendPath(FriendsContentProvider.PATH).build())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 2)
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
+                            }
+                        }
+
+                        for (Movie movie : localEvent.getMovieList()) {
+                            Movie localMovie = null;
+                            Cursor curMovie = provider.query(ContentUris.withAppendedId(EventsContentProvider.MOVIES_CONTENT_URI, movie.getId()), null, null, null, null);
+                            if (curMovie != null) {
+                                while (curMovie.moveToNext()) {
+                                    localMovie = Movie.fromCursor(curMovie);
+                                }
+                                curMovie.close();
+                            } // end if
+
+                            if (localMovie == null) {
+                                final ContentProviderOperation.Builder movieBuilder = ContentProviderOperation
+                                        .newInsert(EventsContentProvider.MOVIES_CONTENT_URI);
+                                movieBuilder.withValues(movie.getContentValues());
+                                batch.add(movieBuilder.build());
+                            }
+
+                            if (localEvent.getWinner() != null && movie.getId().equals(localEvent.getWinner().getId())) {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(movie.getId().toString())
+                                        .appendPath(EventsContentProvider.PATH_MOVIES).build())
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_WINNER, 1)
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_MOVIE_ID, movie.getId()).build());
+                            } else {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(movie.getId().toString())
+                                        .appendPath(EventsContentProvider.PATH_MOVIES).build())
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_WINNER, 0)
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_MOVIE_ID, movie.getId()).build());
+                            }
+                        }
+                    }
+                    provider.applyBatch(batch);
+                } // end if
+
+                // Updating local events
+                if (eventsToUpdate.size() != 0) {
+                    final ArrayList<ContentProviderOperation> batch = new ArrayList<ContentProviderOperation>();
+                    for (Event localEvent : eventsToUpdate) {
+
+                        final ContentProviderOperation.Builder builder = ContentProviderOperation
+                                .newUpdate(ContentUris.withAppendedId(EventsContentProvider.CONTENT_URI, localEvent.getId()));
+                        builder.withValues(localEvent.getContentValues());
+                        batch.add(builder.build());
+
+                        ArrayList<Friend> allFriends = new ArrayList<Friend>();
+                        allFriends.addAll(localEvent.getFriendList());
+                        allFriends.addAll(localEvent.getFriendAcceptedList());
+                        allFriends.addAll(localEvent.getFriendDeclinedList());
+
+                        for (Friend friend : allFriends) {
+                            Friend localFriend = null;
+                            Cursor curFriend = provider.query(ContentUris.withAppendedId(EventsContentProvider.FRIENDS_CONTENT_URI, friend.getId()), null, null, null, null);
+
+                            Log.d(Constants.TAG, TAG + "> cur friend:" + curFriend);
+                            if (curFriend != null) {
+                                while (curFriend.moveToNext()) {
+                                    localFriend = Friend.fromCursor(curFriend);
+                                }
+                                curFriend.close();
+                            } // end if
+
+                            if (localFriend == null) {
+                                final ContentProviderOperation.Builder friendBuilder = ContentProviderOperation
+                                        .newInsert(EventsContentProvider.FRIENDS_CONTENT_URI);
+                                friendBuilder.withValues(friend.getContentValues());
+                                batch.add(friendBuilder.build());
+                            }
+
+                            if (localEvent.getFriendList().contains(localFriend)) {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
+                                        .appendPath(FriendsContentProvider.PATH).build())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 0)
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
+                            } else if (localEvent.getFriendAcceptedList().contains(localFriend)) {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
+                                        .appendPath(FriendsContentProvider.PATH).build())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 1)
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
+                            } else if (localEvent.getFriendDeclinedList().contains(localFriend)) {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
+                                        .appendPath(FriendsContentProvider.PATH).build())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 2)
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
+                            }
+                        }
+
+                        for (Movie movie : localEvent.getMovieList()) {
+                            Movie localMovie = null;
+                            Cursor curMovie = provider.query(ContentUris.withAppendedId(EventsContentProvider.MOVIES_CONTENT_URI, movie.getId()), null, null, null, null);
+                            if (curMovie != null) {
+                                while (curMovie.moveToNext()) {
+                                    localMovie = Movie.fromCursor(curMovie);
+                                }
+                                curMovie.close();
+                            } // end if
+
+                            if (localMovie == null) {
+                                final ContentProviderOperation.Builder movieBuilder = ContentProviderOperation
+                                        .newInsert(EventsContentProvider.MOVIES_CONTENT_URI);
+                                movieBuilder.withValues(movie.getContentValues());
+                                batch.add(movieBuilder.build());
+                            }
+
+                            if (localEvent.getWinner() != null && movie.getId().equals(localEvent.getWinner().getId())) {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(movie.getId().toString())
+                                        .appendPath(EventsContentProvider.PATH_MOVIES).build())
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_WINNER, 1)
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_MOVIE_ID, movie.getId()).build());
+                            } else {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(movie.getId().toString())
+                                        .appendPath(EventsContentProvider.PATH_MOVIES).build())
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_WINNER, 0)
+                                        .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_MOVIE_ID, movie.getId()).build());
+                            }
+                        }
+                    }
+                    provider.applyBatch(batch);
                 } // end if
 
                 if (eventsToDelete.size() != 0) {
@@ -127,6 +360,21 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                                 .withSelection(CineVoxDBHelper.EVENTS_COL_ID + " = ?", new String[]{localEvent.getId().toString()})
                                 .build();
                         operations.add(operation);
+
+                        for (Friend friend : localEvent.getFriendList()) {
+                            operations.add(ContentProviderOperation.newDelete(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
+                                    .appendPath(FriendsContentProvider.PATH).build())
+                                    .withSelection(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID + " = ?", new String[]{localEvent.getId().toString()})
+                                    .build());
+                        }
+
+                        for (Movie movie : localEvent.getMovieList()) {
+                            operations.add(ContentProviderOperation.newDelete(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(movie.getId().toString())
+                                    .appendPath(EventsContentProvider.PATH_MOVIES).build())
+                                    .withSelection(CineVoxDBHelper.EVENT_MOVIES_COL_EVENT_ID + " = ?", new String[]{localEvent.getId().toString()})
+                                    .build());
+                        }
+
                     } // end for
                     provider.applyBatch(operations);
                 } // end if

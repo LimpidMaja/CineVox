@@ -30,6 +30,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.limpidgreen.cinevox.dao.CineVoxDBHelper;
 import com.limpidgreen.cinevox.dao.EventsContentProvider;
+import com.limpidgreen.cinevox.dao.FriendsContentProvider;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.NetworkUtil;
 import com.limpidgreen.cinevox.util.Utility;
@@ -131,8 +132,13 @@ public class SplashScreenActivity extends Activity {
     private void onFetchAuthTokenResult() {
         mApplication.setAPIToken(mAuthToken);
         mApplication.setmAccount(mAccount);
-        Bundle params = new Bundle();
-        ContentResolver.requestSync(mAccount, EventsContentProvider.AUTHORITY, params);
+        Bundle settingsBundle = new Bundle();
+        settingsBundle.putBoolean(
+                ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        settingsBundle.putBoolean(
+                ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        ContentResolver.requestSync(mAccount, EventsContentProvider.AUTHORITY, settingsBundle);
+        ContentResolver.requestSync(mAccount, FriendsContentProvider.AUTHORITY, settingsBundle);
 
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);

@@ -17,15 +17,15 @@
 
         <RelativeLayout
             android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_height="75dp"
             android:background="#ff877ac3"
             android:layout_gravity="center"
             android:gravity="center"
             android:layout_marginRight="2dp">
             <ImageView
-                android:id="@+id/event_status"
+                android:id="@+id/movie_poster"
                 android:layout_width="50dp"
-                android:layout_height="50dp"
+                android:layout_height="75dp"
                 android:background="#ff877ac3"
                 android:gravity="center"
                 android:textColor="#ffffff"
@@ -36,8 +36,8 @@
 
     <LinearLayout
         android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:layout_alignParentRight="true"
+        android:layout_height="75dp"
+        android:layout_toLeftOf="@id/edit_layout"
         android:layout_toRightOf="@+id/select_layout"
         android:background="#F5F5F5"
         android:gravity="center"
@@ -46,7 +46,7 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/friendName"
+            android:id="@+id/movie_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#6C6C6C"
@@ -56,6 +56,29 @@
             android:textStyle="bold"
             android:typeface="sans" />
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/edit_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true">
+
+        <RelativeLayout
+            android:layout_width="50dp"
+            android:layout_height="75dp"
+            android:background="#ffd9b8f1"
+            android:layout_marginLeft="2dp">
+
+            <ImageView
+                android:id="@+id/select_icon"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_centerInParent="true"
+                android:paddingRight="0dp"
+                android:src="@android:drawable/ic_menu_add"
+                />
+        </RelativeLayout>
     </LinearLayout>
 
 </RelativeLayout>

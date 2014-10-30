@@ -11,11 +11,7 @@ package com.limpidgreen.cinevox;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.content.ContentProvider;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -27,16 +23,19 @@ import android.widget.EditText;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.JsonPrimitive;
+import com.limpidgreen.cinevox.adapters.FriendsBarListAdapter;
+import com.limpidgreen.cinevox.adapters.MoviesBarListAdapter;
 import com.limpidgreen.cinevox.dao.EventsContentProvider;
 import com.limpidgreen.cinevox.exception.APICallException;
 import com.limpidgreen.cinevox.model.Event;
 import com.limpidgreen.cinevox.model.Friend;
+import com.limpidgreen.cinevox.model.Movie;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.NetworkUtil;
 
@@ -47,6 +46,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+
+import it.sephiroth.android.library.widget.HListView;
 
 /**
  * New Event Activity.
@@ -65,6 +66,8 @@ public class NewEventActivity extends Activity {
     private EditText mPlaceEdit;
     private Button mDatePickerButton;
     private Button mTimePickerButton;
+    private MoviesBarListAdapter mAdapterMovies;
+    private FriendsBarListAdapter mAdapterFriends;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +94,13 @@ public class NewEventActivity extends Activity {
         Time eventTime = Time.valueOf((hour + 1) + ":00:00");
         mEvent = new Event(eventDate, eventTime);
 
-        Log.i(Constants.TAG, "EVENT: " + mEvent.toString());
+        HListView list = (HListView) findViewById(R.id.listMoviesBar);
+        mAdapterMovies = new MoviesBarListAdapter(mEvent.getMovieList(), this);
+        list.setAdapter(mAdapterMovies);
+
+        HListView listFriends = (HListView) findViewById(R.id.listFriendsBar);
+        mAdapterFriends = new FriendsBarListAdapter(mEvent.getFriendList(), mEvent.getFriendAcceptedList(), mEvent.getFriendDeclinedList(), this);
+        listFriends.setAdapter(mAdapterFriends);
     }
 
     /**
@@ -172,7 +181,8 @@ public class NewEventActivity extends Activity {
      */
     public void handleSelectMovies(View v) {
         Intent intent = new Intent(this, SelectMoviesActivity.class);
-        startActivity(intent);
+        intent.putParcelableArrayListExtra(Constants.PARAM_MOVIE_LIST, mEvent.getMovieList());
+        startActivityForResult(intent, Constants.EVENT_MOVIE_SELECT_REQUEST_CODE);
     }
 
     /**
@@ -200,7 +210,19 @@ public class NewEventActivity extends Activity {
                     ArrayList<Friend> friends = data
                             .getParcelableArrayListExtra(Constants.PARAM_FRIEND_LIST);
                     mEvent.setFriendList(friends);
+                    mAdapterFriends.updateList(mEvent.getFriendList(), mEvent.getFriendAcceptedList(), mEvent.getFriendDeclinedList());
                     Log.i(Constants.TAG, "SELECTED FRIEND: " + friends);
+                } else {
+                    this.setResult(Activity.RESULT_CANCELED);
+                } // end if-else
+                break;
+            case Constants.EVENT_MOVIE_SELECT_REQUEST_CODE:
+                if (resultCode == Activity.RESULT_OK) {
+                    ArrayList<Movie> movies = data
+                            .getParcelableArrayListExtra(Constants.PARAM_MOVIE_LIST);
+                    mEvent.setMovieList(movies);
+                    mAdapterMovies.updateList(mEvent.getMovieList());
+                    Log.i(Constants.TAG, "SELECTED MOVIES: " + movies);
                 } else {
                     this.setResult(Activity.RESULT_CANCELED);
                 } // end if-else
@@ -223,6 +245,22 @@ public class NewEventActivity extends Activity {
             mEvent.setDescription(mDescriptionEdit.getText().toString());
             mEvent.setPlace(mPlaceEdit.getText().toString());
 
+            if (mEvent.getFriendList().isEmpty()) {
+                Toast toast = Toast.makeText(this,
+                        "You did not invite any friends!",
+                        Toast.LENGTH_SHORT);
+                toast.show();
+                return;
+            }
+
+            if (mEvent.getMovieList().isEmpty()) {
+                Toast toast = Toast.makeText(this,
+                        "You did not add any movies!",
+                        Toast.LENGTH_SHORT);
+                toast.show();
+                return;
+            }
+
             new CreateEventTask().execute();
         } else {
             Toast toast = Toast.makeText(this,
@@ -233,9 +271,9 @@ public class NewEventActivity extends Activity {
     }
 
     public void onCreateEventResult(JsonElement element) {
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
-        Gson gson = builder.create();
+        GsonBuilder jsonBuilder = new GsonBuilder();
+        jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+        Gson gson = jsonBuilder.create();
 
         Log.i(Constants.TAG, "RETURNED : jsonObject:" +  element.getAsJsonObject().get("event").toString());
         Event eventDB = gson.fromJson(
@@ -244,15 +282,18 @@ public class NewEventActivity extends Activity {
         );
         mEvent = eventDB;
 
-        Log.i(Constants.TAG, "NEW OBJECT:" +  mEvent.toString());
-
-        ContentResolver mResolver = getContentResolver();
-        mResolver.insert(EventsContentProvider.CONTENT_URI, mEvent.getContentValues());
-
-        Toast toast = Toast.makeText(this,
-                "Event Added Successfully!", Toast.LENGTH_SHORT);
-        toast.show();
-        finish();
+        boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, false);
+        if (result) {
+            Toast toast = Toast.makeText(this,
+                    "Event Added Successfully!", Toast.LENGTH_SHORT);
+            toast.show();
+            finish();
+        } else {
+            Toast toast = Toast.makeText(this,
+                    "There was a problem creating the event. Try again!", Toast.LENGTH_SHORT);
+            toast.show();
+            finish();
+        }
     }
 
     public void onCreateEventError() {
@@ -275,11 +316,23 @@ public class NewEventActivity extends Activity {
          */
         @Override
         protected JsonElement doInBackground(Void... value) {
-            Gson gson = new GsonBuilder()
-                    .setFieldNamingStrategy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                    .create();
-            JsonObject jsonObject = new JsonObject();
-            jsonObject.add("event", gson.toJsonTree(mEvent));
+            GsonBuilder builder = new GsonBuilder();
+            builder.registerTypeAdapter(Event.class, new Event.EventSerializer());
+            Gson gson = builder.create();
+
+            JsonObject jsonObject = gson.toJsonTree(mEvent).getAsJsonObject();
+
+            JsonArray moviesJson = new JsonArray();
+            for (Movie movie : mEvent.getMovieList()) {
+                moviesJson.add(new JsonPrimitive(movie.getId()));
+            }
+            jsonObject.add("movies", moviesJson);
+
+            JsonArray friendsJson = new JsonArray();
+            for (Friend friend : mEvent.getFriendList()) {
+                friendsJson.add(new JsonPrimitive(friend.getId()));
+            }
+            jsonObject.add("friends", friendsJson);
 
             Log.i(Constants.TAG, "jsonObject:" +  jsonObject.toString());
             try {
