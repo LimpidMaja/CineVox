@@ -11,6 +11,8 @@ package com.limpidgreen.cinevox;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
@@ -63,6 +65,9 @@ public class WinnerActivity extends Activity {
         if (mEvent ==  null && mEvent.getWinner() != null) {
             finish();
         }
+
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.cancel(mEvent.getId());
 
         TextView title = (TextView) findViewById(R.id.movie_title);
         ImageView moviePoster = (ImageView) findViewById(R.id.movie_poster);

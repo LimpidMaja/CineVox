@@ -105,6 +105,8 @@ public class Event implements Serializable {
 
     private Movie winner;
 
+    private Knockout knockout;
+
     public Event() {
         super();
     }
@@ -121,7 +123,7 @@ public class Event implements Serializable {
         this.numVotesPerUser = 2;
         this.votingRange = VotingRange.ONE_TO_FIVE;
         this.tieKnockout = true;
-        this.knockoutRounds = 5;
+        this.knockoutRounds = 4;
         this.knockoutTimeLimit = 15;
         this.waitTimeLimit = true;
         this.knockoutPhase = 0;
@@ -130,6 +132,7 @@ public class Event implements Serializable {
         this.friendDeclinedList = new ArrayList<Friend>();
         this.movieList = new ArrayList<Movie>();
         this.winner = null;
+        this.knockout = null;
     }
 
     public Event(Integer id, String name, String description,
@@ -183,6 +186,7 @@ public class Event implements Serializable {
         this.friendAcceptedList = new ArrayList<Friend>();
         this.friendDeclinedList = new ArrayList<Friend>();
         this.winner = null;
+        this.knockout = null;
     }
 
     /**
@@ -274,11 +278,14 @@ public class Event implements Serializable {
         if (!name.equals(event.name)) return false;
         if (!id.equals(event.id)) return false;
         if (!updatedAt.equals(event.updatedAt)) return false;
-        if (eventStatus.ordinal() != event.eventStatus.ordinal()) return false;
 
-        Log.i(Constants.TAG, "THIS WINNER: " + winner);
-        Log.i(Constants.TAG, "OTHER WINNER: " + event.winner);
+        Log.i(Constants.TAG, "eventStatus: " + eventStatus + ", es2:" + event.eventStatus);
+        if (eventStatus != null ? (eventStatus.ordinal() != event.eventStatus.ordinal()) : event.eventStatus != null) return false;
+
         if (winner != null ? !winner.getId().equals(event.winner != null ? event.winner.getId() : null) : event.winner != null)
+            return false;
+
+        if (knockout != null ? !knockout.getId().equals(event.knockout != null ? event.knockout.getId() : null) : event.knockout != null)
             return false;
 
         if (friendList.size() != event.friendList.size()) return false;
@@ -578,6 +585,14 @@ public class Event implements Serializable {
         this.winner = winner;
     }
 
+    public Knockout getKnockout() {
+        return knockout;
+    }
+
+    public void setKnockout(Knockout knockout) {
+        this.knockout = knockout;
+    }
+
     public static class EventDeserializer implements JsonDeserializer<Event> {
         @Override
         public Event deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
@@ -610,6 +625,28 @@ public class Event implements Serializable {
             } // end for
 
             event.setMovieList(movieList);
+
+            JsonObject jsonKnockoutObject = !json.getAsJsonObject().get("knockout_matches").isJsonNull() ? json.getAsJsonObject().get("knockout_matches").getAsJsonObject() : null;
+            if (jsonKnockoutObject != null) {
+                Log.i(Constants.TAG, "KNOCKOUT:" + jsonKnockoutObject.toString());
+                Integer movie1Id = jsonKnockoutObject.get("movie_id_1").getAsInt();
+                Integer movie2Id = jsonKnockoutObject.get("movie_id_2").getAsInt();
+
+                Movie movie1 = null;
+                Movie movie2 = null;
+                for (Movie movie : event.getMovieList()) {
+                    if (movie.getId().equals(movie1Id)) {
+                        movie1 = movie;
+                    }
+                    if (movie.getId().equals(movie2Id)) {
+                        movie2 = movie;
+                    } // end if
+                } // end for
+
+                Knockout knockout = new Knockout(jsonKnockoutObject.get("id").getAsInt(), movie1, movie2, jsonKnockoutObject.get("round").getAsInt());
+                event.setKnockout(knockout);
+                Log.i(Constants.TAG, "KNOCKOUT:" + knockout);
+            } // end if
 
             JsonArray friends = json.getAsJsonObject().get("friends").getAsJsonArray();
             ArrayList<Friend> friendList = new ArrayList<Friend>();

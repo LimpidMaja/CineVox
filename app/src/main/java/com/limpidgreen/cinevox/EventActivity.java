@@ -8,47 +8,32 @@
  */
 package com.limpidgreen.cinevox;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.Activity;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
-import android.view.ActionMode;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.limpidgreen.cinevox.adapters.EventListAdapter;
 import com.limpidgreen.cinevox.adapters.FriendsBarListAdapter;
 import com.limpidgreen.cinevox.adapters.MoviesBarListAdapter;
-import com.limpidgreen.cinevox.dao.CineVoxDBHelper;
 import com.limpidgreen.cinevox.dao.EventsContentProvider;
-import com.limpidgreen.cinevox.exception.APICallException;
 import com.limpidgreen.cinevox.model.Event;
-import com.limpidgreen.cinevox.model.EventStatus;
-import com.limpidgreen.cinevox.model.Friend;
-import com.limpidgreen.cinevox.model.Movie;
 import com.limpidgreen.cinevox.util.Constants;
-import com.limpidgreen.cinevox.util.GCMNotificationIntentService;
 import com.limpidgreen.cinevox.util.NetworkUtil;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import it.sephiroth.android.library.widget.HListView;
@@ -62,15 +47,8 @@ import it.sephiroth.android.library.widget.HListView;
 public class EventActivity extends Activity {
     /** Application */
     private CineVoxApplication mApplication;
-
     private ContentResolver mResolver;
-
-    /** User Account */
-    private Account mAccount;
-    /** Account manager */
-    private AccountManager mAccountManager;
-    /** User Account API Token */
-    private String mAuthToken;
+    private EventObserver mObserver;
 
     private TextView mWaitingUsers;
     private LinearLayout mConfirm;
@@ -78,6 +56,8 @@ public class EventActivity extends Activity {
     private Button mVote;
     private Button mKnockoutChoose;
     private Button mWinner;
+    private LinearLayout mStartAnyways;
+    private LinearLayout mCancelEvent;
 
     private Event mEvent;
 
@@ -124,6 +104,9 @@ public class EventActivity extends Activity {
             mApplication.startAuthTokenFetch(this);
         }
 
+        mResolver = getContentResolver();
+        mObserver = new EventObserver(false);
+
         TextView eventName = (TextView) findViewById(R.id.event_title);
         TextView eventDescription = (TextView) findViewById(R.id.event_description);
         TextView eventDate = (TextView) findViewById(R.id.event_date);
@@ -159,7 +142,7 @@ public class EventActivity extends Activity {
             public void onClick(View v) {
                 Intent intent = new Intent(EventActivity.this, MoviesKnockoutActivity.class);
                 intent.putExtra(Constants.PARAM_EVENT_ID, mEvent.getId());
-                startActivity(intent);
+                startActivityForResult(intent, Constants.EVENT_KNOCKOUT_MOVIE_REQUEST_CODE);
             }
         });
 
@@ -172,6 +155,9 @@ public class EventActivity extends Activity {
                 startActivity(intent);
             }
         });
+
+        mStartAnyways = (LinearLayout) findViewById(R.id.status_start_anyways);
+        mCancelEvent = (LinearLayout) findViewById(R.id.status_cancel_event);
 
         eventName.setText(mEvent.getName());
         eventDescription.setText(mEvent.getDescription());
@@ -190,6 +176,24 @@ public class EventActivity extends Activity {
         updateStatusLayout();
     }
 
+    @Override
+    protected void onResume() {
+        mResolver.registerContentObserver(EventsContentProvider.CONTENT_URI, true, mObserver);
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        mResolver.unregisterContentObserver(mObserver);
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        mResolver.unregisterContentObserver(mObserver);
+        super.onDestroy();
+    }
+
     public void updateStatusLayout() {
         switch (mEvent.getEventStatus()) {
             case WAITING_OTHERS:
@@ -199,6 +203,8 @@ public class EventActivity extends Activity {
                 mVote.setVisibility(View.GONE);
                 mKnockoutChoose.setVisibility(View.GONE);
                 mWinner.setVisibility(View.GONE);
+                mCancelEvent.setVisibility(View.GONE);
+                mStartAnyways.setVisibility(View.GONE);
                 break;
             case CONFIRM:
                 mConfirm.setVisibility(View.VISIBLE);
@@ -207,6 +213,8 @@ public class EventActivity extends Activity {
                 mVote.setVisibility(View.GONE);
                 mKnockoutChoose.setVisibility(View.GONE);
                 mWinner.setVisibility(View.GONE);
+                mCancelEvent.setVisibility(View.GONE);
+                mStartAnyways.setVisibility(View.GONE);
                 break;
             case ADD_MOVIES:
                 mAddMovies.setVisibility(View.VISIBLE);
@@ -215,6 +223,8 @@ public class EventActivity extends Activity {
                 mVote.setVisibility(View.GONE);
                 mKnockoutChoose.setVisibility(View.GONE);
                 mWinner.setVisibility(View.GONE);
+                mCancelEvent.setVisibility(View.GONE);
+                mStartAnyways.setVisibility(View.GONE);
                 break;
             case VOTE:
                 mVote.setVisibility(View.VISIBLE);
@@ -223,6 +233,8 @@ public class EventActivity extends Activity {
                 mAddMovies.setVisibility(View.GONE);
                 mKnockoutChoose.setVisibility(View.GONE);
                 mWinner.setVisibility(View.GONE);
+                mCancelEvent.setVisibility(View.GONE);
+                mStartAnyways.setVisibility(View.GONE);
                 break;
             case KNOCKOUT_CHOOSE:
                 mKnockoutChoose.setVisibility(View.VISIBLE);
@@ -231,6 +243,8 @@ public class EventActivity extends Activity {
                 mAddMovies.setVisibility(View.GONE);
                 mVote.setVisibility(View.GONE);
                 mWinner.setVisibility(View.GONE);
+                mCancelEvent.setVisibility(View.GONE);
+                mStartAnyways.setVisibility(View.GONE);
                 break;
             case WINNER:
                 mWinner.setVisibility(View.VISIBLE);
@@ -239,8 +253,53 @@ public class EventActivity extends Activity {
                 mAddMovies.setVisibility(View.GONE);
                 mVote.setVisibility(View.GONE);
                 mKnockoutChoose.setVisibility(View.GONE);
+                mCancelEvent.setVisibility(View.GONE);
+                mStartAnyways.setVisibility(View.GONE);
                 break;
             case FINISHED:
+                mWinner.setVisibility(View.VISIBLE);
+                mWaitingUsers.setVisibility(View.GONE);
+                mConfirm.setVisibility(View.GONE);
+                mAddMovies.setVisibility(View.GONE);
+                mVote.setVisibility(View.GONE);
+                mKnockoutChoose.setVisibility(View.GONE);
+                mCancelEvent.setVisibility(View.GONE);
+                mStartAnyways.setVisibility(View.GONE);
+                break;
+            case DECLINED:
+                mWinner.setVisibility(View.GONE);
+                mWaitingUsers.setVisibility(View.GONE);
+                mConfirm.setVisibility(View.GONE);
+                mAddMovies.setVisibility(View.GONE);
+                mVote.setVisibility(View.GONE);
+                mKnockoutChoose.setVisibility(View.GONE);
+                mCancelEvent.setVisibility(View.GONE);
+                mStartAnyways.setVisibility(View.GONE);
+                break;
+            case FAILED:
+                mWinner.setVisibility(View.GONE);
+                mWaitingUsers.setVisibility(View.GONE);
+                mConfirm.setVisibility(View.GONE);
+                mAddMovies.setVisibility(View.GONE);
+                mVote.setVisibility(View.GONE);
+                mKnockoutChoose.setVisibility(View.GONE);
+                mCancelEvent.setVisibility(View.GONE);
+                mStartAnyways.setVisibility(View.GONE);
+                break;
+            case START_WITHOUT_ALL:
+                if (mEvent.getFriendAcceptedList().isEmpty()) {
+                    mCancelEvent.setVisibility(View.VISIBLE);
+                    mStartAnyways.setVisibility(View.GONE);
+                } else {
+                    mStartAnyways.setVisibility(View.VISIBLE);
+                    mCancelEvent.setVisibility(View.GONE);
+                } // end if-else
+                mWinner.setVisibility(View.GONE);
+                mWaitingUsers.setVisibility(View.GONE);
+                mConfirm.setVisibility(View.GONE);
+                mAddMovies.setVisibility(View.GONE);
+                mVote.setVisibility(View.GONE);
+                mKnockoutChoose.setVisibility(View.GONE);
                 break;
             default:
         }
@@ -262,6 +321,9 @@ public class EventActivity extends Activity {
      * @param v view
      */
     public void handleJoinEvent(View v) {
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.cancel(mEvent.getId());
+
         ConfirmEventTask task = new ConfirmEventTask();
         task.execute(true);
     }
@@ -272,8 +334,50 @@ public class EventActivity extends Activity {
      * @param v view
      */
     public void handleDeclineEvent(View v) {
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.cancel(mEvent.getId());
+
         ConfirmEventTask task = new ConfirmEventTask();
         task.execute(false);
+    }
+
+    /**
+     * Handle Cancel button click.
+     *
+     * @param v view
+     */
+    public void handleCancelEvent(View v) {
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.cancel(mEvent.getId());
+
+        CancelEventTask task = new CancelEventTask();
+        task.execute();
+    }
+
+    /**
+     * Handle Wait button click.
+     *
+     * @param v view
+     */
+    public void handleWaitUsersEvent(View v) {
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.cancel(mEvent.getId());
+
+        WaitEventTask task = new WaitEventTask();
+        task.execute();
+    }
+
+    /**
+     * Handle Start Anyways button click.
+     *
+     * @param v view
+     */
+    public void handleStartAnywaysEvent(View v) {
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.cancel(mEvent.getId());
+
+        StartAnywaysEventTask task = new StartAnywaysEventTask();
+        task.execute();
     }
 
     /*
@@ -297,6 +401,15 @@ public class EventActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case Constants.EVENT_VOTE_MOVIE_REQUEST_CODE:
+                if (resultCode == Activity.RESULT_OK) {
+                    Integer eventId = data .getIntExtra(Constants.PARAM_EVENT_ID, 0);
+                    mEvent = EventsContentProvider.queryEvent(getContentResolver(), eventId);
+                    updateStatusLayout();
+                } else {
+                    this.setResult(Activity.RESULT_CANCELED);
+                } // end if-else
+                break;
+            case Constants.EVENT_KNOCKOUT_MOVIE_REQUEST_CODE:
                 if (resultCode == Activity.RESULT_OK) {
                     Integer eventId = data .getIntExtra(Constants.PARAM_EVENT_ID, 0);
                     mEvent = EventsContentProvider.queryEvent(getContentResolver(), eventId);
@@ -334,6 +447,78 @@ public class EventActivity extends Activity {
         toast.show();
     }
 
+    public void onCancelEventResult(Event event) {
+        mEvent = event;
+
+        boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, true);
+        if (result) {
+            Toast toast = Toast.makeText(this,
+                    "Event Cancelled Successfully!", Toast.LENGTH_SHORT);
+            toast.show();
+
+            updateStatusLayout();
+        } else {
+            Toast toast = Toast.makeText(this,
+                    "There was a problem cancelling the event. Try again!", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+
+    }
+
+    public void onCancelEventError() {
+        Toast toast = Toast.makeText(this,
+                "There was a problem cancelling the event. Try again!", Toast.LENGTH_SHORT);
+        toast.show();
+    }
+
+    public void onStartEventResult(Event event) {
+        mEvent = event;
+
+        boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, true);
+        if (result) {
+            Toast toast = Toast.makeText(this,
+                    "Event Started Successfully!", Toast.LENGTH_SHORT);
+            toast.show();
+
+            updateStatusLayout();
+        } else {
+            Toast toast = Toast.makeText(this,
+                    "There was a problem starting the event. Try again!", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+
+    }
+
+    public void onStartEventError() {
+        Toast toast = Toast.makeText(this,
+                "There was a problem starting the event. Try again!", Toast.LENGTH_SHORT);
+        toast.show();
+    }
+
+    public void onWaitEventResult(Event event) {
+        mEvent = event;
+
+        boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, true);
+        if (result) {
+            Toast toast = Toast.makeText(this,
+                    "Event Time limit increased Successfully!", Toast.LENGTH_SHORT);
+            toast.show();
+
+            updateStatusLayout();
+        } else {
+            Toast toast = Toast.makeText(this,
+                    "There was a problem increasing time limit for the event. Try again!", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+
+    }
+
+    public void onWaitEventError() {
+        Toast toast = Toast.makeText(this,
+                "There was a problem increasing time limit for the event. Try again!", Toast.LENGTH_SHORT);
+        toast.show();
+    }
+
     /**
      * Create Confirm Event Task to send an async call to the server to confirm an event.
      *
@@ -367,4 +552,134 @@ public class EventActivity extends Activity {
             } // end if
         } // end onPostExecute()
     } // end ConfirmEventTask()
+
+    /**
+     * Create Cancel Event Task to send an async call to the server to cancel an event.
+     *
+     * @author MajaDobnik
+     *
+     */
+    private class CancelEventTask extends AsyncTask<Void, Void, Event> {
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#doInBackground(Params[])
+         */
+        @Override
+        protected Event doInBackground(Void... value) {
+            return NetworkUtil.cancelEvent(mApplication.getAPIToken(), mEvent.getId());
+        } // end doInBackground()
+
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+         */
+        @Override
+        protected void onPostExecute(Event result) {
+            if (result != null) {
+                onCancelEventResult(result);
+            } else {
+                onCancelEventError();
+            } // end if
+        } // end onPostExecute()
+    } // end CancelEventTask()
+
+    /**
+     * Create Start Anyways Event Task to send an async call to the server to start an event.
+     *
+     * @author MajaDobnik
+     *
+     */
+    private class StartAnywaysEventTask extends AsyncTask<Void, Void, Event> {
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#doInBackground(Params[])
+         */
+        @Override
+        protected Event doInBackground(Void... value) {
+            return NetworkUtil.startEvent(mApplication.getAPIToken(), mEvent.getId());
+        } // end doInBackground()
+
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+         */
+        @Override
+        protected void onPostExecute(Event result) {
+            if (result != null) {
+                onStartEventResult(result);
+            } else {
+                onStartEventError();
+            } // end if
+        } // end onPostExecute()
+    } // end StartAnywaysEventTask()
+
+    /**
+     * Create Wait Event Task to send an async call to the server to increase time limit of an event.
+     *
+     * @author MajaDobnik
+     *
+     */
+    private class WaitEventTask extends AsyncTask<Void, Void, Event> {
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#doInBackground(Params[])
+         */
+        @Override
+        protected Event doInBackground(Void... value) {
+            return NetworkUtil.increaseEventTimeLimit(mApplication.getAPIToken(), mEvent.getId());
+        } // end doInBackground()
+
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+         */
+        @Override
+        protected void onPostExecute(Event result) {
+            if (result != null) {
+                onWaitEventResult(result);
+            } else {
+                onWaitEventError();
+            } // end if
+        } // end onPostExecute()
+    } // end StartAnywaysEventTask()
+
+    public class EventObserver extends ContentObserver {
+        boolean selfChange;
+
+        public EventObserver(boolean selfChange) {
+            super(new Handler());
+            this.selfChange = selfChange;
+        }
+
+        /*
+         * Define a method that's called when data in the
+         * observed content provider changes.
+         * This method signature is provided for compatibility with
+         * older platforms.
+         */
+        @Override
+        public void onChange(boolean selfChange) {
+            /*
+             * Invoke the method signature available as of
+             * Android platform version 4.1, with a null URI.
+             */
+            onChange(selfChange, null);
+        }
+        /*
+         * Define a method that's called when data in the
+         * observed content provider changes.
+         */
+        @Override
+        public void onChange(boolean selfChange, Uri changeUri) {
+            Log.i(Constants.TAG, "ON CHANGE!");
+            mEvent = EventsContentProvider.queryEvent(getContentResolver(), mEvent.getId());
+            updateStatusLayout();
+        }
+    }
 }

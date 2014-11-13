@@ -36,12 +36,16 @@ public class Friend implements Serializable, Parcelable {
     private String name;
     private String username;
     private String facebookUID;
+    private Boolean confirmed;
+    private Boolean request;
 
-    public Friend(Integer id, String name, String username, String facebookUID) {
+    public Friend(Integer id, String name, String username, String facebookUID, Boolean confirmed, Boolean request) {
         this.id = id;
         this.name = name;
         this.username = username;
         this.facebookUID = facebookUID;
+        this.confirmed = confirmed;
+        this.request = request;
     }
 
     /**
@@ -67,6 +71,8 @@ public class Friend implements Serializable, Parcelable {
         values.put(CineVoxDBHelper.FRIENDS_COL_NAME, name);
         values.put(CineVoxDBHelper.FRIENDS_COL_USERNAME , username);
         values.put(CineVoxDBHelper.FRIENDS_COL_FACEBOOK_UID, facebookUID);
+        values.put(CineVoxDBHelper.FRIENDS_COL_CONFIRMED, confirmed);
+        values.put(CineVoxDBHelper.FRIENDS_COL_REQUEST, request);
         return values;
     }
 
@@ -76,8 +82,10 @@ public class Friend implements Serializable, Parcelable {
         String name = curFriend.getString(curFriend.getColumnIndex(CineVoxDBHelper.FRIENDS_COL_NAME));
         String username = curFriend.getString(curFriend.getColumnIndex(CineVoxDBHelper.FRIENDS_COL_USERNAME));
         String facebookUID = curFriend.getString(curFriend.getColumnIndex(CineVoxDBHelper.FRIENDS_COL_FACEBOOK_UID));
+        Boolean confirmed = (curFriend.getInt(curFriend.getColumnIndex(CineVoxDBHelper.FRIENDS_COL_CONFIRMED)) == 1)? true : false;
+        Boolean request = (curFriend.getInt(curFriend.getColumnIndex(CineVoxDBHelper.FRIENDS_COL_REQUEST)) == 1)? true : false;
 
-        return new Friend(id, name, username, facebookUID);
+        return new Friend(id, name, username, facebookUID, confirmed, request);
     }
 
     @Override
@@ -92,6 +100,8 @@ public class Friend implements Serializable, Parcelable {
         if (!id.equals(friend.id)) return false;
         if (!username.equals(friend.username)) return false;
         if (!facebookUID.equals(friend.facebookUID)) return false;
+        if (!confirmed.equals(friend.confirmed)) return false;
+        if (!request.equals(friend.request)) return false;
         return true;
     }
 
@@ -138,6 +148,8 @@ public class Friend implements Serializable, Parcelable {
         dest.writeString(name);
         dest.writeString(username);
         dest.writeString(facebookUID);
+        dest.writeString(confirmed.toString());
+        dest.writeString(request.toString());
     }
 
     /**
@@ -150,6 +162,8 @@ public class Friend implements Serializable, Parcelable {
         name = source.readString();
         username = source.readString();
         facebookUID = source.readString();
+        confirmed = source.readString().equals("true") ? true : false;
+        request = source.readString().equals("true") ? true : false;
     }
 
     public Integer getId() {
@@ -184,6 +198,22 @@ public class Friend implements Serializable, Parcelable {
         this.facebookUID = facebookUID;
     }
 
+    public Boolean isConfirmed() {
+        return confirmed;
+    }
+
+    public void setConfirmed(Boolean confirmed) {
+        this.confirmed = confirmed;
+    }
+
+    public Boolean isRequest() {
+        return request;
+    }
+
+    public void setRequest(Boolean request) {
+        this.request = request;
+    }
+
     @Override
     public String toString() {
         return "Friend{" +
@@ -191,6 +221,8 @@ public class Friend implements Serializable, Parcelable {
                 ", name='" + name + '\'' +
                 ", username='" + username + '\'' +
                 ", facebookUID='" + facebookUID + '\'' +
+                ", confirmed=" + confirmed +
+                ", request=" + request +
                 '}';
     }
 }

@@ -36,7 +36,16 @@ public enum EventStatus {
     WINNER(5, "winner"),
 
     @SerializedName("finished")
-    FINISHED(6, "finished");
+    FINISHED(6, "finished"),
+
+    @SerializedName("declined")
+    DECLINED(7, "declined"),
+
+    @SerializedName("failed")
+    FAILED(8, "failed"),
+
+    @SerializedName("start_without_all")
+    START_WITHOUT_ALL(9, "start_without_all");
 
     private String type;
     private Integer id;
@@ -77,6 +86,12 @@ public enum EventStatus {
                 return WINNER;
             case 6:
                 return FINISHED;
+            case 7:
+                return DECLINED;
+            case 8:
+                return FAILED;
+            case 9:
+                return START_WITHOUT_ALL;
         }
         return null;
     }

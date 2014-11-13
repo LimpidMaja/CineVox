@@ -57,6 +57,8 @@ public class CineVoxDBHelper extends SQLiteOpenHelper {
     public static final String FRIENDS_COL_NAME = "name";
     public static final String FRIENDS_COL_USERNAME = "username";
     public static final String FRIENDS_COL_FACEBOOK_UID = "facebook_uid";
+    public static final String FRIENDS_COL_CONFIRMED = "confirmed";
+    public static final String FRIENDS_COL_REQUEST = "request";
 
     // Event-Friends DB Table constants
     public static final String EVENT_FRIENDS_TABLE_NAME = "event_friends";
@@ -79,6 +81,13 @@ public class CineVoxDBHelper extends SQLiteOpenHelper {
     public static final String EVENT_MOVIES_COL_MOVIE_ID = "movie_id";
     public static final String EVENT_MOVIES_COL_WINNER = "winner";
 
+    // Event-Knockout DB Table constants
+    public static final String EVENT_KNOCKOUT_TABLE_NAME = "event_knockouts";
+    public static final String EVENT_KNOCKOUT_COL_ID = "_id";
+    public static final String EVENT_KNOCKOUT_COL_EVENT_ID = "event_id";
+    public static final String EVENT_KNOCKOUT_COL_MOVIE_ID_1 = "movie_id_1";
+    public static final String EVENT_KNOCKOUT_COL_MOVIE_ID_2 = "movie_id_2";
+    public static final String EVENT_KNOCKOUT_COL_ROUND = "round";
 
     // Event Database creation sql statement
     public static final String DATABASE_CREATE_EVENTS = "create table "
@@ -116,6 +125,8 @@ public class CineVoxDBHelper extends SQLiteOpenHelper {
             FRIENDS_COL_NAME + " text not null, " +
             FRIENDS_COL_USERNAME + " text not null, " +
             FRIENDS_COL_FACEBOOK_UID + " text not null," +
+            FRIENDS_COL_CONFIRMED + " integer DEFAULT 0," +
+            FRIENDS_COL_REQUEST + " integer DEFAULT 0," +
             "UNIQUE (" + FRIENDS_COL_ID + ") ON CONFLICT REPLACE);";
 
     public static final String DATABASE_CREATE_EVENT_FRIENDS = "create table "
@@ -145,6 +156,17 @@ public class CineVoxDBHelper extends SQLiteOpenHelper {
             "UNIQUE (" + EVENT_MOVIES_COL_EVENT_ID + ","
             + EVENT_MOVIES_COL_MOVIE_ID + ") ON CONFLICT REPLACE);";
 
+    public static final String DATABASE_CREATE_EVENT_KNOCKOUTS = "create table "
+            + EVENT_KNOCKOUT_TABLE_NAME + "(" +
+            EVENT_KNOCKOUT_COL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+            EVENT_KNOCKOUT_COL_EVENT_ID + " integer not null REFERENCES " + EVENTS_TABLE_NAME + "(" + EVENTS_COL_ID + ")," +
+            EVENT_KNOCKOUT_COL_MOVIE_ID_1 + " integer not null REFERENCES " + MOVIES_TABLE_NAME + "(" + MOVIES_COL_ID + ")," +
+            EVENT_KNOCKOUT_COL_MOVIE_ID_2 + " integer not null REFERENCES " + MOVIES_TABLE_NAME + "(" + MOVIES_COL_ID + ")," +
+            EVENT_KNOCKOUT_COL_ROUND + " integer not null," +
+            "UNIQUE (" + EVENT_KNOCKOUT_COL_EVENT_ID + ","
+            + EVENT_KNOCKOUT_COL_MOVIE_ID_1 + ","
+            + EVENT_KNOCKOUT_COL_MOVIE_ID_2 + ") ON CONFLICT REPLACE);";
+
     public CineVoxDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -157,6 +179,7 @@ public class CineVoxDBHelper extends SQLiteOpenHelper {
         database.execSQL(DATABASE_CREATE_EVENT_FRIENDS);
         database.execSQL(DATABASE_CREATE_MOVIES);
         database.execSQL(DATABASE_CREATE_EVENT_MOVIES);
+        database.execSQL(DATABASE_CREATE_EVENT_KNOCKOUTS);
     }
 
     @Override
@@ -167,6 +190,7 @@ public class CineVoxDBHelper extends SQLiteOpenHelper {
         );
         db.execSQL("DROP TABLE IF EXISTS " + EVENT_FRIENDS_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + EVENT_MOVIES_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + EVENT_KNOCKOUT_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + EVENTS_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + FRIENDS_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + MOVIES_TABLE_NAME);

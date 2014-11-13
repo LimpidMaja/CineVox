@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import com.limpidgreen.cinevox.model.Event;
 import com.limpidgreen.cinevox.model.Friend;
+import com.limpidgreen.cinevox.model.Knockout;
 import com.limpidgreen.cinevox.model.Movie;
 import com.limpidgreen.cinevox.util.Constants;
 
@@ -46,11 +47,13 @@ public class EventsContentProvider extends ContentProvider {
     public static final String MOVIES_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.cinevox.movies";
     public static final String FRIENDS_CONTENT_TYPE_DIR = "vnd.android.cursor.dir/vnd.cinevox.friends";
     public static final String FRIENDS_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.cinevox.friends";
+    public static final String EVENT_KNOCKOUT_CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.cinevox.knockouts";
 
     public static final String AUTHORITY = "com.limpidgreen.cinevox.events.provider";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/events");
     public static final Uri MOVIES_CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/movies");
     public static final Uri FRIENDS_CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/friends");
+    public static final Uri KNOCKOUT_CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/knockouts");
 
     public static final UriMatcher URI_MATCHER = buildUriMatcher();
 
@@ -62,6 +65,8 @@ public class EventsContentProvider extends ContentProvider {
     public static final String PATH_FOR_MOVIES_ID = "movies/*";
     public static final String PATH_FRIENDS = "friends";
     public static final String PATH_FOR_FRIENDS_ID = "friends/*";
+    public static final String PATH_FOR_KNOCKOUTS = "events/*/knockouts";
+    public static final String PATH_KNOCKOUTS = "knockouts";
 
     public static final int PATH_TOKEN = 100;
     public static final int PATH_FOR_ID_TOKEN = 101;
@@ -71,6 +76,7 @@ public class EventsContentProvider extends ContentProvider {
     public static final int PATH_FOR_FRIENDS_TOKEN = 105;
     public static final int PATH_FOR_FRIENDS_ID_TOKEN = 106;
     public static final int PATH_FOR_MOVIES_ID_TOKEN = 107;
+    public static final int PATH_FOR_ID_KNOCKOUTS_TOKEN = 108;
 
     private CineVoxDBHelper dbHelper;
 
@@ -86,6 +92,7 @@ public class EventsContentProvider extends ContentProvider {
         matcher.addURI(authority, PATH_FOR_FRIENDS, PATH_FOR_ID_FRIENDS_TOKEN);
         matcher.addURI(authority, PATH_FOR_MOVIES_ID, PATH_FOR_MOVIES_ID_TOKEN);
         matcher.addURI(authority, PATH_FOR_FRIENDS_ID, PATH_FOR_FRIENDS_ID_TOKEN);
+        matcher.addURI(authority, PATH_FOR_KNOCKOUTS, PATH_FOR_ID_KNOCKOUTS_TOKEN);
         return matcher;
     }
 
@@ -158,6 +165,13 @@ public class EventsContentProvider extends ContentProvider {
                 builder.appendWhere(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID + "=" + eventId);
                 return builder.query(db, projection, selection,selectionArgs, null, null, sortOrder);
             }
+            case PATH_FOR_ID_KNOCKOUTS_TOKEN: {
+                int eventId = Integer.valueOf(uri.getPathSegments().get(1));
+                SQLiteQueryBuilder builder = new SQLiteQueryBuilder();
+                builder.setTables(CineVoxDBHelper.EVENT_KNOCKOUT_TABLE_NAME);
+                builder.appendWhere(CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID + "=" + eventId);
+                return builder.query(db, projection, selection,selectionArgs, null, null, sortOrder);
+            }
             default:
                 return null;
         }
@@ -183,6 +197,8 @@ public class EventsContentProvider extends ContentProvider {
                 return FriendsContentProvider.CONTENT_ITEM_TYPE;
             case PATH_FOR_MOVIES_ID_TOKEN:
                 return MOVIES_CONTENT_ITEM_TYPE;
+            case PATH_FOR_ID_KNOCKOUTS_TOKEN:
+                return EVENT_KNOCKOUT_CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("URI " + uri + " is not supported.");
         }
@@ -223,6 +239,12 @@ public class EventsContentProvider extends ContentProvider {
                     getContext().getContentResolver().notifyChange(uri, null);
                 return MOVIES_CONTENT_URI.buildUpon().appendPath(values.getAsString(CineVoxDBHelper.EVENT_MOVIES_COL_MOVIE_ID)).build();
             }
+            case PATH_FOR_ID_KNOCKOUTS_TOKEN: {
+                long id = db.insert(CineVoxDBHelper.EVENT_KNOCKOUT_TABLE_NAME, null, values);
+                if (id != -1)
+                    getContext().getContentResolver().notifyChange(uri, null);
+                return KNOCKOUT_CONTENT_URI.buildUpon().appendPath(values.getAsString(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ID)).build();
+            }
             default: {
                 throw new UnsupportedOperationException("URI: " + uri + " not supported.");
             }
@@ -261,6 +283,12 @@ public class EventsContentProvider extends ContentProvider {
                 if (!TextUtils.isEmpty(selection))
                     eventIdWhereClause += " AND " + selection;
                 rowsDeleted = db.delete(CineVoxDBHelper.EVENT_MOVIES_TABLE_NAME, eventIdWhereClause, selectionArgs);
+                break;
+            case (PATH_FOR_ID_KNOCKOUTS_TOKEN):
+                eventIdWhereClause = CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID + "=" + uri.getPathSegments().get(1);
+                if (!TextUtils.isEmpty(selection))
+                    eventIdWhereClause += " AND " + selection;
+                rowsDeleted = db.delete(CineVoxDBHelper.EVENT_KNOCKOUT_TABLE_NAME, eventIdWhereClause, selectionArgs);
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported URI: " + uri);
@@ -339,6 +367,22 @@ public class EventsContentProvider extends ContentProvider {
                     rowsUpdated = sqlDB.update(CineVoxDBHelper.EVENT_MOVIES_TABLE_NAME,
                             values,
                             CineVoxDBHelper.EVENT_MOVIES_COL_EVENT_ID + "=" + id
+                                    + " and "
+                                    + selection,
+                            selectionArgs);
+                }
+                break;
+            case PATH_FOR_ID_KNOCKOUTS_TOKEN:
+                id = uri.getPathSegments().get(1);
+                if (TextUtils.isEmpty(selection)) {
+                    rowsUpdated = sqlDB.update(CineVoxDBHelper.EVENT_KNOCKOUT_TABLE_NAME,
+                            values,
+                            CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID + "=" + id,
+                            null);
+                } else {
+                    rowsUpdated = sqlDB.update(CineVoxDBHelper.EVENT_KNOCKOUT_TABLE_NAME,
+                            values,
+                            CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID + "=" + id
                                     + " and "
                                     + selection,
                             selectionArgs);
@@ -442,6 +486,49 @@ public class EventsContentProvider extends ContentProvider {
             }
         }
 
+        if (mEvent.getKnockout() != null) {
+            Knockout localKnockout = null;
+            Cursor curKnockout = mResolver.query(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(mEvent.getId().toString())
+                    .appendPath(EventsContentProvider.PATH_KNOCKOUTS).build(), null, null, null, null);
+            if (curKnockout != null) {
+                while (curKnockout.moveToNext()) {
+                    Integer movie1Id = curKnockout.getInt(curKnockout.getColumnIndex(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1));
+                    Integer movie2Id = curKnockout.getInt(curKnockout.getColumnIndex(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2));
+
+                    Movie movie1 = null;
+                    Movie movie2 = null;
+                    for (Movie movie : mEvent.getMovieList()) {
+                        if (movie.getId().equals(movie1Id)) {
+                            movie1 = movie;
+                        }
+                        if (movie.getId().equals(movie2Id)) {
+                            movie2 = movie;
+                        } // end if
+                    } // end for
+                    localKnockout = localKnockout.fromCursor(curKnockout, movie1, movie2);
+                }
+                curKnockout.close();
+            } // end if
+
+            if (localKnockout == null) {
+                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(mEvent.getId().toString())
+                        .appendPath(EventsContentProvider.PATH_KNOCKOUTS).build())
+                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ID, mEvent.getKnockout().getId())
+                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID, mEvent.getId())
+                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1, mEvent.getKnockout().getMovie1().getId())
+                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2, mEvent.getKnockout().getMovie2().getId())
+                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ROUND, mEvent.getKnockout().getRound()).build());
+            } else {
+                batch.add(ContentProviderOperation.newUpdate(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(mEvent.getId().toString())
+                        .appendPath(EventsContentProvider.PATH_KNOCKOUTS).build())
+                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ID, mEvent.getKnockout().getId())
+                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID, mEvent.getId())
+                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1, mEvent.getKnockout().getMovie1().getId())
+                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2, mEvent.getKnockout().getMovie2().getId())
+                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ROUND, mEvent.getKnockout().getRound()).build());
+            } //end if-else
+        } // end if
+
         try {
             mResolver.applyBatch(EventsContentProvider.AUTHORITY, batch);
 
@@ -494,6 +581,31 @@ public class EventsContentProvider extends ContentProvider {
                         mEvent.getMovieList().add(movie);
                     }
                     curMovies.close();
+                } // end if
+
+                Uri EVENT_KNOCKOUT_CONTENT_URI = Uri.parse("content://" + EventsContentProvider.AUTHORITY + "/events/" + mEvent.getId() + "/" + EventsContentProvider.PATH_KNOCKOUTS);
+                Cursor curKnockouts = mResolver.query(EVENT_KNOCKOUT_CONTENT_URI, null, null, null, null);
+
+                if (curKnockouts != null) {
+                    while (curKnockouts.moveToNext()) {
+                        Integer movie1Id = curKnockouts.getInt(curKnockouts.getColumnIndex(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1));
+                        Integer movie2Id = curKnockouts.getInt(curKnockouts.getColumnIndex(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2));
+
+                        Movie movie1 = null;
+                        Movie movie2 = null;
+                        for (Movie movie : mEvent.getMovieList()) {
+                            if (movie.getId().equals(movie1Id)) {
+                                movie1 = movie;
+                            }
+                            if (movie.getId().equals(movie2Id)) {
+                                movie2 = movie;
+                            } // end if
+                        } // end for
+
+                        Knockout knockout = Knockout.fromCursor(curKnockouts, movie1, movie2);
+                        mEvent.setKnockout(knockout);
+                    }
+                    curKnockouts.close();
                 } // end if
             }
             curEvent.close();

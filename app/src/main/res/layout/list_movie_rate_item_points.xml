@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/movieBarListItem"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    android:clickable="true"
+    android:paddingTop="2dp"
+    android:weightSum="4" >
+
+    <LinearLayout
+        android:id="@+id/select_layout"
+        android:layout_width="0dp"
+        android:layout_weight="0.5"
+        android:layout_height="wrap_content"
+        android:background="#ffffff">
+
+        <RelativeLayout
+            android:layout_width="50dp"
+            android:layout_height="80dp"
+            android:background="#ff877ac3"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_marginRight="2dp">
+            <ImageView
+                android:id="@+id/movie_poster"
+                android:layout_width="50dp"
+                android:layout_height="80dp"
+                android:background="#ff877ac3"
+                android:gravity="center"
+                android:textColor="#ffffff"
+                android:textSize="15sp" />
+
+        </RelativeLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_height="80dp"
+        android:layout_width="0dp"
+        android:layout_weight="1.5"
+        android:layout_toRightOf="@+id/select_layout"
+        android:background="#F5F5F5"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:padding="5dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/movie_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#6C6C6C"
+            android:textSize="20sp"
+            android:textAlignment="center"
+            android:text="Pulp Fiction"
+            android:textStyle="bold"
+            android:typeface="sans" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_height="80dp"
+        android:layout_width="0dp"
+        android:layout_weight="2"
+        android:layout_toRightOf="@+id/select_layout"
+        android:background="#F5F5F5"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:padding="5dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button_remove_point"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@android:drawable/ic_delete"/>
+
+        <TextView
+            android:id="@+id/movie_points"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:text="0"
+            android:textSize="30dp"
+            android:textStyle="bold"/>
+
+        <Button
+            android:id="@+id/button_add_point"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@android:drawable/ic_input_add"/>
+
+    </LinearLayout>
+
+</LinearLayout>

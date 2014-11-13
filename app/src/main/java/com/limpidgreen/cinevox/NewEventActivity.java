@@ -36,6 +36,8 @@ import com.limpidgreen.cinevox.exception.APICallException;
 import com.limpidgreen.cinevox.model.Event;
 import com.limpidgreen.cinevox.model.Friend;
 import com.limpidgreen.cinevox.model.Movie;
+import com.limpidgreen.cinevox.model.RatingSystem;
+import com.limpidgreen.cinevox.model.VotingRange;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.NetworkUtil;
 
@@ -192,7 +194,20 @@ public class NewEventActivity extends Activity {
      */
     public void handleEditVoting(View v) {
         Intent intent = new Intent(this, EditVotingActivity.class);
-        startActivity(intent);
+        intent.putExtra(Constants.PARAM_TIME_LIMIT, mEvent.getTimeLimit());
+        intent.putExtra(Constants.PARAM_VOTING_PERCENT, mEvent.getMinimumVotingPercent());
+        if (RatingSystem.RANDOM.equals( mEvent.getRatingSystem())) {
+            intent.putExtra(Constants.PARAM_USE_VOTING, false);
+        } else {
+            intent.putExtra(Constants.PARAM_USE_VOTING, true);
+        }
+        intent.putExtra(Constants.PARAM_RATING_SYSTEM, mEvent.getRatingSystem().ordinal());
+        intent.putExtra(Constants.PARAM_VOTING_RANGE, mEvent.getVotingRange().ordinal());
+        intent.putExtra(Constants.PARAM_USE_VOTES_PER_USER, mEvent.getNumVotesPerUser());
+        intent.putExtra(Constants.PARAM_TIE_KNOCKOUT, mEvent.getTieKnockout());
+        intent.putExtra(Constants.PARAM_KNOCKOUT_ROUNDS, mEvent.getKnockoutRounds());
+
+        startActivityForResult(intent, Constants.EVENT_VOTING_EDIT_REQUEST_CODE);
     }
 
     /*
@@ -223,6 +238,28 @@ public class NewEventActivity extends Activity {
                     mEvent.setMovieList(movies);
                     mAdapterMovies.updateList(mEvent.getMovieList());
                     Log.i(Constants.TAG, "SELECTED MOVIES: " + movies);
+                } else {
+                    this.setResult(Activity.RESULT_CANCELED);
+                } // end if-else
+                break;
+            case Constants.EVENT_VOTING_EDIT_REQUEST_CODE:
+                if (resultCode == Activity.RESULT_OK) {
+                    int timeLimit = data.getIntExtra(Constants.PARAM_TIME_LIMIT, 120);
+                    mEvent.setTimeLimit(timeLimit);
+                    int votingPercent = data.getIntExtra(Constants.PARAM_VOTING_PERCENT, 100);
+                    mEvent.setMinimumVotingPercent(votingPercent);
+                    int ratingSystemId = data.getIntExtra(Constants.PARAM_RATING_SYSTEM, 0);
+                    mEvent.setRatingSystem(RatingSystem.fromInteger(ratingSystemId));
+                    int votingRangeId = data.getIntExtra(Constants.PARAM_VOTING_RANGE, 0);
+                    mEvent.setVotingRange(VotingRange.fromInteger(votingRangeId));
+                    int votesPerUser = data.getIntExtra(Constants.PARAM_USE_VOTES_PER_USER, 2);
+                    mEvent.setNumVotesPerUser(votesPerUser);
+                    boolean tieKnockout = data.getBooleanExtra(Constants.PARAM_TIE_KNOCKOUT, true);
+                    mEvent.setTieKnockout(tieKnockout);
+                    int knockoutRounds = data.getIntExtra(Constants.PARAM_KNOCKOUT_ROUNDS, 4);
+                    mEvent.setKnockoutRounds(knockoutRounds);
+
+                    Log.i(Constants.TAG, "EVENT: " + mEvent);
                 } else {
                     this.setResult(Activity.RESULT_CANCELED);
                 } // end if-else

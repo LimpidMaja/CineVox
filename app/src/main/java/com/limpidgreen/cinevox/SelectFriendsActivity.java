@@ -19,7 +19,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 
-import com.limpidgreen.cinevox.adapters.FriendListAdapter;
+import com.limpidgreen.cinevox.adapters.FriendSelectListAdapter;
+import com.limpidgreen.cinevox.dao.CineVoxDBHelper;
 import com.limpidgreen.cinevox.dao.FriendsContentProvider;
 import com.limpidgreen.cinevox.model.Friend;
 import com.limpidgreen.cinevox.util.Constants;
@@ -41,7 +42,7 @@ public class SelectFriendsActivity extends Activity {
     private String mAuthToken;
 
     private ContentResolver mResolver;
-    private FriendListAdapter adapter;
+    private FriendSelectListAdapter adapter;
     private ArrayList<Friend> mFriendList;
 
     @Override
@@ -63,7 +64,7 @@ public class SelectFriendsActivity extends Activity {
         mResolver = getContentResolver();
 
         mFriendList = new ArrayList<Friend>();
-        Cursor curFriends = mResolver.query(FriendsContentProvider.CONTENT_URI, null, null, null, null);
+        Cursor curFriends = mResolver.query(FriendsContentProvider.CONTENT_URI, null, CineVoxDBHelper.FRIENDS_COL_CONFIRMED + " = 1", null, null);
         if (curFriends != null) {
             while (curFriends.moveToNext()) {
                 mFriendList.add(Friend.fromCursor(curFriends));
@@ -73,7 +74,7 @@ public class SelectFriendsActivity extends Activity {
         Log.i(Constants.TAG, "FRIENDS: " + mFriendList);
 
         ListView list = (ListView) findViewById(R.id.listFriends);
-        adapter = new FriendListAdapter(mFriendList, selectedFriends, this);
+        adapter = new FriendSelectListAdapter(mFriendList, selectedFriends, this);
         list.setAdapter(adapter);
     }
 

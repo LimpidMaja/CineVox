@@ -24,7 +24,10 @@ public enum RatingPhase {
     STARTING(1, "starting"),
 
     @SerializedName("knockout_match")
-    KNOCKOUT_MATCH(2, "knockout_match");
+    KNOCKOUT_MATCH(2, "knockout_match"),
+
+    @SerializedName("done")
+    DONE(3, "done");
 
     private String type;
     private Integer id;
@@ -57,6 +60,8 @@ public enum RatingPhase {
                 return STARTING;
             case 2:
                 return KNOCKOUT_MATCH;
+            case 3:
+                return DONE;
         }
         return null;
     }

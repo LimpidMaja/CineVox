@@ -34,15 +34,16 @@
         android:orientation="vertical">
 
         <TextView
-                android:text="Semi-Final"
+            android:id="@+id/round_txt"
+            android:text="Semi-Final"
             android:layout_marginTop="10dp"
-                android:layout_width="match_parent"
-                android:layout_weight="0.5"
-                android:layout_height="40dp"
-                android:background="#ff877ac3"
-                android:textColor="#ffffff"
-                android:textSize="18sp"
-                android:gravity="center"/>
+            android:layout_width="match_parent"
+            android:layout_weight="0.5"
+            android:layout_height="40dp"
+            android:background="#ff877ac3"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:gravity="center"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -51,6 +52,7 @@
             android:weightSum="2">
 
             <TextView
+                android:id="@+id/movie_1_title"
                 android:layout_marginTop="10dp"
                 android:text="Pulp Fiction"
                 android:layout_width="0dp"
@@ -63,6 +65,7 @@
                 android:gravity="center"/>
 
             <TextView
+                android:id="@+id/movie_2_title"
                 android:layout_marginTop="10dp"
                 android:text="The Godfather"
                 android:layout_width="0dp"
@@ -81,7 +84,8 @@
             android:layout_height="200dp"
             android:orientation="horizontal"
             android:weightSum="2">
-            <EditText
+            <ImageView
+                android:id="@+id/movie_1_poster"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="match_parent"
@@ -89,10 +93,10 @@
                 android:textColor="#ffffff"
                 android:textSize="15sp"
                 android:layout_marginRight="2dp"
-                android:hint="slika"
                 android:gravity="center"/>
 
-            <EditText
+            <ImageView
+                android:id="@+id/movie_2_poster"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="match_parent"
@@ -100,7 +104,6 @@
                 android:textColor="#ffffff"
                 android:textSize="15sp"
                 android:layout_marginLeft="2dp"
-                android:hint="slika"
                 android:gravity="center"/>
 
         </LinearLayout>
@@ -112,23 +115,25 @@
             android:weightSum="2">
 
             <TextView
+                android:id="@+id/vote_1"
                 android:layout_marginTop="10dp"
-                android:text="My Vote"
+                android:text="Vote"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="30dp"
-                android:background="#ffa172f1"
+                android:layout_height="40dp"
+                android:background="#ff877ac3"
                 android:textColor="#ffffff"
                 android:textSize="18sp"
                 android:layout_marginRight="2dp"
                 android:gravity="center"/>
 
             <TextView
+                android:id="@+id/vote_2"
                 android:layout_marginTop="10dp"
-                android:text="My Vote"
+                android:text="Vote"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="30dp"
+                android:layout_height="40dp"
                 android:background="#ff877ac3"
                 android:textColor="#ffffff"
                 android:layout_marginLeft="2dp"
@@ -146,6 +151,7 @@
         android:padding="5dp"
         android:background="#f23421"
         android:textColor="#ffffff"
+        android:onClick="handleKnockoutDone"
         android:textSize="40sp"
         android:layout_alignParentBottom="true"/>
 

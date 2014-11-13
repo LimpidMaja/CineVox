@@ -200,6 +200,39 @@ public class EventListAdapter extends BaseAdapter {
                     }
                 });
                 break;
+            case DECLINED:
+                eventStatusButton.setText("Declined");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(mContext, EventActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
+                        mContext.startActivity(intent);
+                    }
+                });
+                break;
+            case FAILED:
+                eventStatusButton.setText("Failed");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(mContext, EventActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
+                        mContext.startActivity(intent);
+                    }
+                });
+                break;
+            case START_WITHOUT_ALL:
+                eventStatusButton.setText("Start Anyways?");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(mContext, EventActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
+                        mContext.startActivity(intent);
+                    }
+                });
+                break;
             default:
         }
 

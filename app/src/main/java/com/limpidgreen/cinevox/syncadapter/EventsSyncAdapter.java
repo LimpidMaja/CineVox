@@ -29,6 +29,7 @@ import com.limpidgreen.cinevox.dao.EventsContentProvider;
 import com.limpidgreen.cinevox.dao.FriendsContentProvider;
 import com.limpidgreen.cinevox.model.Event;
 import com.limpidgreen.cinevox.model.Friend;
+import com.limpidgreen.cinevox.model.Knockout;
 import com.limpidgreen.cinevox.model.Movie;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.NetworkUtil;
@@ -125,6 +126,33 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                     } // end if
 
                     localEvents.add(event);
+
+                    Uri EVENT_KNOCKOUT_CONTENT_URI = Uri.parse("content://" + EventsContentProvider.AUTHORITY + "/events/" + event.getId() + "/" + EventsContentProvider.PATH_KNOCKOUTS);
+                    Cursor curKnockouts = provider.query(EVENT_KNOCKOUT_CONTENT_URI, null, null, null, null);
+
+                    Log.d(Constants.TAG, TAG + "> curKnockouts: " + curKnockouts.getCount());
+                    if (curKnockouts != null) {
+                        while (curKnockouts.moveToNext()) {
+                            Integer movie1Id = curKnockouts.getInt(curKnockouts.getColumnIndex(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1));
+                            Integer movie2Id = curKnockouts.getInt(curKnockouts.getColumnIndex(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2));
+
+                            Movie movie1 = null;
+                            Movie movie2 = null;
+                            for (Movie movie : event.getMovieList()) {
+                                if (movie.getId().equals(movie1Id)) {
+                                    movie1 = movie;
+                                }
+                                if (movie.getId().equals(movie2Id)) {
+                                    movie2 = movie;
+                                } // end if
+                            } // end for
+
+                            Knockout knockout = Knockout.fromCursor(curKnockouts, movie1, movie2);
+                            event.setKnockout(knockout);
+                            Log.d(Constants.TAG, TAG + "> KNOCKOUT: " + knockout);
+                        }
+                        curKnockouts.close();
+                    } // end if
                 }
                 curEvents.close();
             }
@@ -255,6 +283,49 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                                         .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_MOVIE_ID, movie.getId()).build());
                             }
                         }
+
+                        if (localEvent.getKnockout() != null) {
+                            Knockout localKnockout = null;
+                            Cursor curKnockout = provider.query(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(localEvent.getId().toString())
+                                    .appendPath(EventsContentProvider.PATH_KNOCKOUTS).build(), null, null, null, null);
+                            if (curKnockout != null) {
+                                while (curKnockout.moveToNext()) {
+                                    Integer movie1Id = curKnockout.getInt(curKnockout.getColumnIndex(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1));
+                                    Integer movie2Id = curKnockout.getInt(curKnockout.getColumnIndex(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2));
+
+                                    Movie movie1 = null;
+                                    Movie movie2 = null;
+                                    for (Movie movie : localEvent.getMovieList()) {
+                                        if (movie.getId().equals(movie1Id)) {
+                                            movie1 = movie;
+                                        }
+                                        if (movie.getId().equals(movie2Id)) {
+                                            movie2 = movie;
+                                        } // end if
+                                    } // end for
+                                    localKnockout = localKnockout.fromCursor(curKnockout, movie1, movie2);
+                                }
+                                curKnockout.close();
+                            } // end if
+
+                            if (localKnockout == null) {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(localEvent.getId().toString())
+                                        .appendPath(EventsContentProvider.PATH_KNOCKOUTS).build())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ID, localEvent.getKnockout().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1, localEvent.getKnockout().getMovie1().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2, localEvent.getKnockout().getMovie2().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ROUND, localEvent.getKnockout().getRound()).build());
+                            } else {
+                                batch.add(ContentProviderOperation.newUpdate(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(localEvent.getId().toString())
+                                        .appendPath(EventsContentProvider.PATH_KNOCKOUTS).build())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ID, localEvent.getKnockout().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1, localEvent.getKnockout().getMovie1().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2, localEvent.getKnockout().getMovie2().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ROUND, localEvent.getKnockout().getRound()).build());
+                            } //end if-else
+                        } // end if
                     }
                     provider.applyBatch(batch);
                 } // end if
@@ -345,6 +416,49 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                                         .withValue(CineVoxDBHelper.EVENT_MOVIES_COL_MOVIE_ID, movie.getId()).build());
                             }
                         }
+
+                        if (localEvent.getKnockout() != null) {
+                            Knockout localKnockout = null;
+                            Cursor curKnockout = provider.query(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(localEvent.getId().toString())
+                                    .appendPath(EventsContentProvider.PATH_KNOCKOUTS).build(), null, null, null, null);
+                            if (curKnockout != null) {
+                                while (curKnockout.moveToNext()) {
+                                    Integer movie1Id = curKnockout.getInt(curKnockout.getColumnIndex(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1));
+                                    Integer movie2Id = curKnockout.getInt(curKnockout.getColumnIndex(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2));
+
+                                    Movie movie1 = null;
+                                    Movie movie2 = null;
+                                    for (Movie movie : localEvent.getMovieList()) {
+                                        if (movie.getId().equals(movie1Id)) {
+                                            movie1 = movie;
+                                        }
+                                        if (movie.getId().equals(movie2Id)) {
+                                            movie2 = movie;
+                                        } // end if
+                                    } // end for
+                                    localKnockout = localKnockout.fromCursor(curKnockout, movie1, movie2);
+                                }
+                                curKnockout.close();
+                            } // end if
+
+                            if (localKnockout == null) {
+                                batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(localEvent.getId().toString())
+                                        .appendPath(EventsContentProvider.PATH_KNOCKOUTS).build())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ID, localEvent.getKnockout().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1, localEvent.getKnockout().getMovie1().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2, localEvent.getKnockout().getMovie2().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ROUND, localEvent.getKnockout().getRound()).build());
+                            } else {
+                                batch.add(ContentProviderOperation.newUpdate(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(localEvent.getId().toString())
+                                        .appendPath(EventsContentProvider.PATH_KNOCKOUTS).build())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ID, localEvent.getKnockout().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_1, localEvent.getKnockout().getMovie1().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_MOVIE_ID_2, localEvent.getKnockout().getMovie2().getId())
+                                        .withValue(CineVoxDBHelper.EVENT_KNOCKOUT_COL_ROUND, localEvent.getKnockout().getRound()).build());
+                            } //end if-else
+                        } // end if
                     }
                     provider.applyBatch(batch);
                 } // end if
@@ -372,6 +486,13 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                             operations.add(ContentProviderOperation.newDelete(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(movie.getId().toString())
                                     .appendPath(EventsContentProvider.PATH_MOVIES).build())
                                     .withSelection(CineVoxDBHelper.EVENT_MOVIES_COL_EVENT_ID + " = ?", new String[]{localEvent.getId().toString()})
+                                    .build());
+                        }
+
+                        if (localEvent.getKnockout() != null) {
+                            operations.add(ContentProviderOperation.newDelete(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(localEvent.getId().toString())
+                                    .appendPath(EventsContentProvider.PATH_KNOCKOUTS).build())
+                                    .withSelection(CineVoxDBHelper.EVENT_KNOCKOUT_COL_EVENT_ID + " = ?", new String[]{localEvent.getId().toString()})
                                     .build());
                         }
 

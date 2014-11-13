@@ -28,4 +28,13 @@
     <string name="select_movies">Select Movies</string>
     <string name="edit_voting">Edit Voting Settings</string>
     <string name="event_details">Event Details</string>
+    <string name="settings">Settings</string>
+    <string name="friends">Friends</string>
+
+    <!-- LOG OUT -->
+    <string name="menu_item_log_out">Log out</string>
+    <string name="logout_question">Logging out will remove your CineVox data from this phone. Do you want to logout?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
 </resources>

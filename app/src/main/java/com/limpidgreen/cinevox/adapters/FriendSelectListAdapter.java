@@ -9,28 +9,16 @@
 package com.limpidgreen.cinevox.adapters;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
-import android.os.AsyncTask;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.limpidgreen.cinevox.FriendsActivity;
 import com.limpidgreen.cinevox.R;
-import com.limpidgreen.cinevox.WinnerActivity;
-import com.limpidgreen.cinevox.dao.EventsContentProvider;
-import com.limpidgreen.cinevox.model.Event;
-import com.limpidgreen.cinevox.model.EventStatus;
 import com.limpidgreen.cinevox.model.Friend;
-import com.limpidgreen.cinevox.util.Constants;
-import com.limpidgreen.cinevox.util.NetworkUtil;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 
@@ -43,19 +31,21 @@ import java.util.ArrayList;
  * @author MajaDobnik
  *
  */
-public class FriendListAdapter extends BaseAdapter {
+public class FriendSelectListAdapter extends BaseAdapter {
     private static LayoutInflater inflater = null;
-    private FriendsActivity mContext;
+    private Context mContext;
     private ArrayList<Friend> mFriendList;
+    private ArrayList<Friend> mSelectedFriendList;
 
     /**
      * Constructor.
      *
      * @param context
      */
-    public FriendListAdapter(ArrayList<Friend> friendList, FriendsActivity context) {
+    public FriendSelectListAdapter(ArrayList<Friend> friendList, ArrayList<Friend> selectedFriendList, Context context) {
         mContext = context;
         mFriendList = friendList;
+        mSelectedFriendList = selectedFriendList;
         inflater = (LayoutInflater) mContext
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     } // end EventListAdapter()
@@ -90,16 +80,6 @@ public class FriendListAdapter extends BaseAdapter {
         return mFriendList.get(position).getId();
     } // end getItemId()
 
-    /**
-     * Update list.
-     *
-     * @param friendList
-     */
-    public void update(ArrayList<Friend> friendList) {
-        mFriendList = friendList;
-        notifyDataSetChanged();
-    } // end update()
-
     /*
      * (non-Javadoc)
      *
@@ -128,32 +108,29 @@ public class FriendListAdapter extends BaseAdapter {
         ImageLoader.getInstance().displayImage("http://graph.facebook.com/" + friend.getFacebookUID() + "/picture?type=square&height=150&width=150", friendImage, mOptions);
         friendName.setText(friend.getName());
 
-
-        LinearLayout editLayout = (LinearLayout) vi.findViewById(R.id.edit_layout);
-
-        if (friend.isConfirmed()) {
-            editLayout.setVisibility(View.INVISIBLE);
-        } else if (friend.isRequest()) {
-            editLayout.setVisibility(View.VISIBLE);
+        if (mSelectedFriendList.contains(friend)) {
             selectIcon.setImageResource(R.drawable.select_big);
         } else {
-            editLayout.setVisibility(View.VISIBLE);
-            selectIcon.setImageResource(android.R.drawable.ic_dialog_email);
+            selectIcon.setImageResource(R.drawable.select_empty);
         }
 
-        editLayout.setOnClickListener(new View.OnClickListener() {
+        vi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (friend.isRequest()) {
-                    Log.i(Constants.TAG, "CONFIRM!");
-                    mContext.confirmFriendRequest(friend.getId());
-                } else if (!friend.isConfirmed()) {
-                    Log.i(Constants.TAG, "SEND FRIEND REQUEST!");
-                    mContext.sendFriendRequest(friend.getId());
+                if (mSelectedFriendList.contains(friend)) {
+                    mSelectedFriendList.remove(friend);
+                    selectIcon.setImageResource(R.drawable.select_empty);
+                } else {
+                    mSelectedFriendList.add(friend);
+                    selectIcon.setImageResource(R.drawable.select_big);
                 }
             }
         });
 
         return vi;
     } // end getView()
+
+    public ArrayList<Friend> getmSelectedFriendList() {
+        return mSelectedFriendList;
+    }
 }

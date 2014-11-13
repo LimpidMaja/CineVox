@@ -16,6 +16,7 @@ import android.accounts.OperationCanceledException;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentProviderOperation;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SyncResult;
@@ -24,7 +25,9 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.limpidgreen.cinevox.dao.CineVoxDBHelper;
+import com.limpidgreen.cinevox.dao.EventsContentProvider;
 import com.limpidgreen.cinevox.dao.FriendsContentProvider;
+import com.limpidgreen.cinevox.model.Event;
 import com.limpidgreen.cinevox.model.Friend;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.NetworkUtil;
@@ -85,9 +88,20 @@ public class FriendsSyncAdapter extends AbstractThreadedSyncAdapter {
 
             // See what Remote Friends are missing on Local
             ArrayList<Friend> friendsToLocal = new ArrayList<Friend>();
+            ArrayList<Friend> friendsToUpdate = new ArrayList<Friend>();
             for (Friend remoteFriend : remoteFriends) {
                 if (!localFriends.contains(remoteFriend)) {
-                    friendsToLocal.add(remoteFriend);
+                    boolean found = false;
+                    for (Friend localFriend : localFriends) {
+                        if (localFriend.getId().equals(remoteFriend.getId())) {
+                            found = true;
+                            friendsToUpdate.add(remoteFriend);
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        friendsToLocal.add(remoteFriend);
+                    }
                 }
             }
 
@@ -95,11 +109,20 @@ public class FriendsSyncAdapter extends AbstractThreadedSyncAdapter {
             ArrayList<Friend> friendsToDelete = new ArrayList<Friend>();
             for (Friend localFriend : localFriends) {
                 if (!remoteFriends.contains(localFriend)) {
-                    friendsToDelete.add(localFriend);
+                    boolean found = false;
+                    for (Friend remoteFriend : remoteFriends) {
+                        if (localFriend.getId().equals(remoteFriend.getId())) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        friendsToDelete.add(localFriend);
+                    }
                 }
             }
 
-            if (friendsToLocal.size() == 0 && friendsToDelete.size() == 0) {
+            if (friendsToLocal.size() == 0 && friendsToDelete.size() == 0 && friendsToUpdate.size() == 0) {
                 Log.d(Constants.TAG, TAG + "> No server changes to update local database");
             } else {
                 Log.d(Constants.TAG, TAG + "> Updating local database with remote changes");
@@ -115,6 +138,18 @@ public class FriendsSyncAdapter extends AbstractThreadedSyncAdapter {
 
                     provider.bulkInsert(FriendsContentProvider.CONTENT_URI, friendsToLocalValues);
                 } // end if
+
+                // Updating local events
+                if (friendsToUpdate.size() != 0) {
+                    final ArrayList<ContentProviderOperation> batch = new ArrayList<ContentProviderOperation>();
+                    for (Friend localFriend : friendsToUpdate) {
+                        final ContentProviderOperation.Builder builder = ContentProviderOperation
+                                .newUpdate(ContentUris.withAppendedId(FriendsContentProvider.CONTENT_URI, localFriend.getId()));
+                        builder.withValues(localFriend.getContentValues());
+                        batch.add(builder.build());
+                    }
+                    provider.applyBatch(batch);
+                }
 
                 if (friendsToDelete.size() != 0) {
                     ArrayList<ContentProviderOperation> operations = new ArrayList<ContentProviderOperation>();

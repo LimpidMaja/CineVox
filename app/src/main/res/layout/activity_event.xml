@@ -323,5 +323,107 @@
             android:padding="5dp"
             android:background="#ff3a3251"
             android:textColor="#ffffff"/>
+
+        <LinearLayout
+            android:id="@+id/status_start_anyways"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:weightSum="2">
+
+            <TextView
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:padding="5dp"
+                android:textSize="15sp"
+                android:text="The event time limit has passed. Do you want to start without all invited friends?"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_weight="1"
+                android:weightSum="2">
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Yes"
+                    android:textSize="40sp"
+                    android:padding="5dp"
+                    android:background="#ff877ac3"
+                    android:layout_marginRight="2dp"
+                    android:onClick="handleStartAnywaysEvent"
+                    android:textColor="#ffffff"/>
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Wait"
+                    android:layout_marginLeft="2dp"
+                    android:textSize="40sp"
+                    android:padding="5dp"
+                    android:onClick="handleWaitUsersEvent"
+                    android:background="#ffe3c2fb"
+                    android:textColor="#ffffff"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/status_cancel_event"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:weightSum="2">
+
+            <TextView
+                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:padding="5dp"
+                android:textSize="15sp"
+                android:text="The event time limit has passed and nobody confirmed. Do you want to cancel the event?"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_weight="1"
+                android:weightSum="2">
+
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Cancel"
+                    android:textSize="40sp"
+                    android:padding="5dp"
+                    android:background="#ff877ac3"
+                    android:layout_marginRight="2dp"
+                    android:onClick="handleCancelEvent"
+                    android:textColor="#ffffff"/>
+                <Button
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Wait"
+                    android:layout_marginLeft="2dp"
+                    android:textSize="40sp"
+                    android:padding="5dp"
+                    android:onClick="handleWaitUsersEvent"
+                    android:background="#ffe3c2fb"
+                    android:textColor="#ffffff"/>
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 </RelativeLayout>

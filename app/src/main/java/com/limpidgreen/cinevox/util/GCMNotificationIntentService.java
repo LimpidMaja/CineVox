@@ -15,8 +15,10 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -27,10 +29,15 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.limpidgreen.cinevox.EventActivity;
+import com.limpidgreen.cinevox.FriendsActivity;
+import com.limpidgreen.cinevox.MoviesKnockoutActivity;
 import com.limpidgreen.cinevox.R;
+import com.limpidgreen.cinevox.RateMoviesActivity;
 import com.limpidgreen.cinevox.WinnerActivity;
 import com.limpidgreen.cinevox.dao.EventsContentProvider;
+import com.limpidgreen.cinevox.dao.FriendsContentProvider;
 import com.limpidgreen.cinevox.model.Event;
+import com.limpidgreen.cinevox.model.Friend;
 
 /**
  * GCMNotificationIntentService for incoming changes calls from the server.
@@ -53,11 +60,17 @@ public class GCMNotificationIntentService extends IntentService {
             "com.limpidgreen.cinevox.KEY_EVENT_VOTING";
     public static final String KEY_EVENT_WINNER =
             "com.limpidgreen.cinevox.KEY_EVENT_WINNER";
+    public static final String KEY_EVENT_KNOCKOUT =
+            "com.limpidgreen.cinevox.KEY_EVENT_KNOCKOUT";
+    public static final String KEY_FRIEND_REQUEST =
+            "com.limpidgreen.cinevox.KEY_FRIEND_REQUEST";
+    public static final String KEY_FRIEND_REQUEST_ACCEPTED =
+            "com.limpidgreen.cinevox.KEY_FRIEND_REQUEST_ACCEPTED";
+    public static final String KEY_EVENT_CANCELLED =
+            "com.limpidgreen.cinevox.KEY_EVENT_CANCELED";
 
     // Sets an ID for the notification, so it can be updated
     public static final int MESSAGE_NOTIFICATION_ID = 435345;
-
-    NotificationCompat.Builder builder;
 
     public GCMNotificationIntentService() {
         super("GcmIntentService");
@@ -67,131 +80,250 @@ public class GCMNotificationIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Bundle extras = intent.getExtras();
-        GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
 
-        String messageType = gcm.getMessageType(intent);
+        AccountManager mAccountManager = AccountManager.get(this);
+        Account[] accounts = mAccountManager.getAccountsByType(Constants.ACCOUNT_TYPE);
+        if (accounts != null && accounts.length == 1) {
+            Account account = accounts[0];
 
-        if (!extras.isEmpty()) {
-            if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR
-                    .equals(messageType)) {
-                createNotification("Error", "Send error: " + extras.toString());
-            } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED
-                    .equals(messageType)) {
-                createNotification("Error", "Deleted messages on server: "
-                        + extras.toString());
-            } else if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE
-                    .equals(messageType)) {
-                for (String key : extras.keySet()) {
-                    Object value = extras.get(key);
-                    Log.d(Constants.TAG,"BUNDLE:");
-                    Log.d(Constants.TAG, String.format("%s %s (%s)", key,
-                            value.toString(), value.getClass().getName()));
-                }
+            GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
 
-               // Log.d(Constants.TAG,"BUNDLE 1:" + intent.getBooleanExtra(KEY_SYNC_REQUEST, false));
-              //  Log.d(Constants.TAG,"BUNDLE 2:" + intent.getStringExtra(KEY_SYNC_REQUEST));
+            String messageType = gcm.getMessageType(intent);
 
-                if (intent.getStringExtra(KEY_NEW_EVENT_REQUEST) != null && Boolean.valueOf(intent.getStringExtra(KEY_NEW_EVENT_REQUEST))) {
-                    String eventJson = intent.getStringExtra("body");
-                    Log.d(Constants.TAG, "NEW EVENT:" + intent.getStringExtra("body"));
-
-                    if (eventJson != null && !eventJson.isEmpty()) {
-
-                        JsonParser parser = new JsonParser();
-                        JsonElement jsonElement = parser.parse(eventJson);
-
-                        GsonBuilder jsonBuilder = new GsonBuilder();
-                        jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
-                        Gson gson = jsonBuilder.create();
-
-                        Log.i(Constants.TAG, "RETURNED : jsonObject:" + jsonElement.getAsJsonObject().get("event").toString());
-                        Event event = gson.fromJson(
-                                jsonElement.getAsJsonObject().get("event"),
-                                Event.class
-                        );
-
-                        Log.d(Constants.TAG, "EVENT:" + event.toString());
-
-                        boolean result = EventsContentProvider.insertEvent(getContentResolver(), event, false);
-                        if (result) {
-                            sendNewEventNotification(event);
-                        }
+            if (!extras.isEmpty()) {
+                if (GoogleCloudMessaging.MESSAGE_TYPE_SEND_ERROR
+                        .equals(messageType)) {
+                    createNotification("Error", "Send error: " + extras.toString());
+                } else if (GoogleCloudMessaging.MESSAGE_TYPE_DELETED
+                        .equals(messageType)) {
+                    createNotification("Error", "Deleted messages on server: "
+                            + extras.toString());
+                } else if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE
+                        .equals(messageType)) {
+                    for (String key : extras.keySet()) {
+                        Object value = extras.get(key);
+                        Log.d(Constants.TAG, "BUNDLE:");
+                        Log.d(Constants.TAG, String.format("%s %s (%s)", key,
+                                value.toString(), value.getClass().getName()));
                     }
-                } else if (intent.getStringExtra(KEY_EVENT_VOTING) != null && Boolean.valueOf(intent.getStringExtra(KEY_EVENT_VOTING))) {
-                    String eventJson = intent.getStringExtra("body");
-                    Log.d(Constants.TAG, "EVENT VOTING:" + intent.getStringExtra("body"));
 
-                    if (eventJson != null && !eventJson.isEmpty()) {
+                    if (intent.getStringExtra(KEY_NEW_EVENT_REQUEST) != null && Boolean.valueOf(intent.getStringExtra(KEY_NEW_EVENT_REQUEST))) {
+                        String eventJson = intent.getStringExtra("body");
+                        Log.d(Constants.TAG, "NEW EVENT:" + intent.getStringExtra("body"));
 
-                        JsonParser parser = new JsonParser();
-                        JsonElement jsonElement = parser.parse(eventJson);
+                        if (eventJson != null && !eventJson.isEmpty()) {
 
-                        GsonBuilder jsonBuilder = new GsonBuilder();
-                        jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
-                        Gson gson = jsonBuilder.create();
+                            JsonParser parser = new JsonParser();
+                            JsonElement jsonElement = parser.parse(eventJson);
 
-                        Log.i(Constants.TAG, "RETURNED : jsonObject:" + jsonElement.getAsJsonObject().get("event").toString());
-                        Event event = gson.fromJson(
-                                jsonElement.getAsJsonObject().get("event"),
-                                Event.class
-                        );
+                            GsonBuilder jsonBuilder = new GsonBuilder();
+                            jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                            Gson gson = jsonBuilder.create();
 
-                        Log.d(Constants.TAG, "EVENT:" + event.toString());
+                            Log.i(Constants.TAG, "RETURNED : jsonObject:" + jsonElement.getAsJsonObject().get("event").toString());
+                            Event event = gson.fromJson(
+                                    jsonElement.getAsJsonObject().get("event"),
+                                    Event.class
+                            );
 
-                        boolean result = EventsContentProvider.insertEvent(getContentResolver(), event, true);
-                        if (result) {
-                            sendEventVotingStartedNotification(event);
+                            Log.d(Constants.TAG, "EVENT:" + event.toString());
+
+                            boolean result = EventsContentProvider.insertEvent(getContentResolver(), event, false);
+                            if (result) {
+                                sendNewEventNotification(event);
+                            }
                         }
-                    }
-                } else if (intent.getStringExtra(KEY_EVENT_WINNER) != null && Boolean.valueOf(intent.getStringExtra(KEY_EVENT_WINNER))) {
-                    String eventJson = intent.getStringExtra("body");
-                    Log.d(Constants.TAG, "EVENT WINNER:" + intent.getStringExtra("body"));
+                    } else if (intent.getStringExtra(KEY_EVENT_VOTING) != null && Boolean.valueOf(intent.getStringExtra(KEY_EVENT_VOTING))) {
+                        String eventJson = intent.getStringExtra("body");
+                        Log.d(Constants.TAG, "EVENT VOTING:" + intent.getStringExtra("body"));
 
-                    if (eventJson != null && !eventJson.isEmpty()) {
+                        if (eventJson != null && !eventJson.isEmpty()) {
 
-                        JsonParser parser = new JsonParser();
-                        JsonElement jsonElement = parser.parse(eventJson);
+                            JsonParser parser = new JsonParser();
+                            JsonElement jsonElement = parser.parse(eventJson);
 
-                        GsonBuilder jsonBuilder = new GsonBuilder();
-                        jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
-                        Gson gson = jsonBuilder.create();
+                            GsonBuilder jsonBuilder = new GsonBuilder();
+                            jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                            Gson gson = jsonBuilder.create();
 
-                        Log.i(Constants.TAG, "RETURNED : jsonObject:" + jsonElement.getAsJsonObject().get("event").toString());
-                        Event event = gson.fromJson(
-                                jsonElement.getAsJsonObject().get("event"),
-                                Event.class
-                        );
+                            Log.i(Constants.TAG, "RETURNED : jsonObject:" + jsonElement.getAsJsonObject().get("event").toString());
+                            Event event = gson.fromJson(
+                                    jsonElement.getAsJsonObject().get("event"),
+                                    Event.class
+                            );
 
-                        Log.d(Constants.TAG, "EVENT:" + event.toString());
+                            Log.d(Constants.TAG, "EVENT:" + event.toString());
 
-                        boolean result = EventsContentProvider.insertEvent(getContentResolver(), event, true);
-                        if (result) {
-                            sendEventWinnerNotification(event);
+                            boolean result = EventsContentProvider.insertEvent(getContentResolver(), event, true);
+                            if (result) {
+                                sendEventVotingStartedNotification(event);
+                            }
                         }
-                    }
-                } else if (intent.getStringExtra(KEY_EVENT_FRIEND_CONFIRM) != null && Boolean.valueOf(intent.getStringExtra(KEY_EVENT_FRIEND_CONFIRM))) {
-                    sendEventConfirmNotification(intent.getStringExtra("event_name"), intent.getStringExtra("title"), Integer.valueOf(intent.getStringExtra("event_id")));
-                    AccountManager mAccountManager = AccountManager.get(this);
-                    Account account = mAccountManager
-                            .getAccountsByType(Constants.ACCOUNT_TYPE)[0];
-                    ContentResolver.requestSync(account, EventsContentProvider.AUTHORITY, new Bundle());
-                } else if (intent.getBooleanExtra(KEY_SYNC_REQUEST, false)) {
+                    } else if (intent.getStringExtra(KEY_EVENT_KNOCKOUT) != null && Boolean.valueOf(intent.getStringExtra(KEY_EVENT_KNOCKOUT))) {
+                        String eventJson = intent.getStringExtra("body");
+                        Log.d(Constants.TAG, "EVENT KNOCKOUT:" + intent.getStringExtra("body"));
 
-                    AccountManager mAccountManager = AccountManager.get(this);
-                    Account account = mAccountManager
-                            .getAccountsByType(Constants.ACCOUNT_TYPE)[0];
-                    ContentResolver.requestSync(account, EventsContentProvider.AUTHORITY, new Bundle());
-                } else {
-                    createNotification("Message", "Message Received from Google GCM Server:\n\n"
-                            + extras.get(KEY_MSG_REQUEST));
-                    AccountManager mAccountManager = AccountManager.get(this);
-                    Account account = mAccountManager
-                            .getAccountsByType(Constants.ACCOUNT_TYPE)[0];
-                   // ContentResolver.requestSync(account, EventsContentProvider.AUTHORITY, new Bundle());
+                        if (eventJson != null && !eventJson.isEmpty()) {
+
+                            JsonParser parser = new JsonParser();
+                            JsonElement jsonElement = parser.parse(eventJson);
+
+                            GsonBuilder jsonBuilder = new GsonBuilder();
+                            jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                            Gson gson = jsonBuilder.create();
+
+                            Log.i(Constants.TAG, "RETURNED : jsonObject:" + jsonElement.getAsJsonObject().get("event").toString());
+                            Event event = gson.fromJson(
+                                    jsonElement.getAsJsonObject().get("event"),
+                                    Event.class
+                            );
+
+                            Log.d(Constants.TAG, "EVENT:" + event.toString());
+
+                            boolean result = EventsContentProvider.insertEvent(getContentResolver(), event, true);
+                            if (result) {
+                                sendEventKnockoutNotification(event);
+                            }
+                        }
+                    } else if (intent.getStringExtra(KEY_EVENT_WINNER) != null && Boolean.valueOf(intent.getStringExtra(KEY_EVENT_WINNER))) {
+                        String eventJson = intent.getStringExtra("body");
+                        Log.d(Constants.TAG, "EVENT WINNER:" + intent.getStringExtra("body"));
+
+                        if (eventJson != null && !eventJson.isEmpty()) {
+
+                            JsonParser parser = new JsonParser();
+                            JsonElement jsonElement = parser.parse(eventJson);
+
+                            GsonBuilder jsonBuilder = new GsonBuilder();
+                            jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                            Gson gson = jsonBuilder.create();
+
+                            Log.i(Constants.TAG, "RETURNED : jsonObject:" + jsonElement.getAsJsonObject().get("event").toString());
+                            Event event = gson.fromJson(
+                                    jsonElement.getAsJsonObject().get("event"),
+                                    Event.class
+                            );
+
+                            Log.d(Constants.TAG, "EVENT:" + event.toString());
+
+                            boolean result = EventsContentProvider.insertEvent(getContentResolver(), event, true);
+                            if (result) {
+                                sendEventWinnerNotification(event);
+                            }
+                        }
+                    } else if (intent.getStringExtra(KEY_EVENT_CANCELLED) != null && Boolean.valueOf(intent.getStringExtra(KEY_EVENT_CANCELLED))) {
+                        String eventJson = intent.getStringExtra("body");
+                        Log.d(Constants.TAG, "EVENT CANCELLED:" + intent.getStringExtra("body"));
+
+                        if (eventJson != null && !eventJson.isEmpty()) {
+
+                            JsonParser parser = new JsonParser();
+                            JsonElement jsonElement = parser.parse(eventJson);
+
+                            GsonBuilder jsonBuilder = new GsonBuilder();
+                            jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                            Gson gson = jsonBuilder.create();
+
+                            Log.i(Constants.TAG, "RETURNED : jsonObject:" + jsonElement.getAsJsonObject().get("event").toString());
+                            Event event = gson.fromJson(
+                                    jsonElement.getAsJsonObject().get("event"),
+                                    Event.class
+                            );
+
+                            Log.d(Constants.TAG, "EVENT:" + event.toString());
+
+                            boolean result = EventsContentProvider.insertEvent(getContentResolver(), event, true);
+                            if (result) {
+                                sendEventCancelledNotification(event);
+                            }
+                        }
+                    } else if (intent.getStringExtra(KEY_EVENT_FRIEND_CONFIRM) != null && Boolean.valueOf(intent.getStringExtra(KEY_EVENT_FRIEND_CONFIRM))) {
+                        sendEventConfirmNotification(intent.getStringExtra("event_name"), intent.getStringExtra("title"), Integer.valueOf(intent.getStringExtra("event_id")));
+                        ContentResolver.requestSync(account, EventsContentProvider.AUTHORITY, new Bundle());
+                    } else if (intent.getStringExtra(KEY_FRIEND_REQUEST) != null && Boolean.valueOf(intent.getStringExtra(KEY_FRIEND_REQUEST))) {
+                        String friendJson = intent.getStringExtra("body");
+                        Log.d(Constants.TAG, "KEY_FRIEND_REQUEST:" + intent.getStringExtra("body"));
+
+                        if (friendJson != null && !friendJson.isEmpty()) {
+
+                            JsonParser parser = new JsonParser();
+                            JsonElement jsonElement = parser.parse(friendJson);
+
+                            Gson gson = new Gson();
+
+                            Log.i(Constants.TAG, "RETURNED : jsonObject:" + jsonElement.getAsJsonObject().get("friend").toString());
+                            Friend friend = gson.fromJson(
+                                    jsonElement.getAsJsonObject().get("friend"),
+                                    Friend.class
+                            );
+
+                            Log.d(Constants.TAG, "Friend:" + friend.toString());
+
+                            Friend localFriend = null;
+                            Cursor curFriend = getContentResolver().query(ContentUris.withAppendedId(EventsContentProvider.FRIENDS_CONTENT_URI, friend.getId()), null, null, null, null);
+                            if (curFriend != null) {
+                                while (curFriend.moveToNext()) {
+                                    localFriend = Friend.fromCursor(curFriend);
+                                }
+                                curFriend.close();
+                            } // end if
+
+                            if (localFriend != null) {
+                                getContentResolver().update(ContentUris.withAppendedId(FriendsContentProvider.CONTENT_URI, friend.getId()), friend.getContentValues(), null, null);
+                            } else {
+                                getContentResolver().insert(FriendsContentProvider.CONTENT_URI, friend.getContentValues());
+                            }
+                            sendFriendRequestNotification(friend);
+                        }
+                    } else if (intent.getStringExtra(KEY_FRIEND_REQUEST_ACCEPTED) != null && Boolean.valueOf(intent.getStringExtra(KEY_FRIEND_REQUEST_ACCEPTED))) {
+                        String friendJson = intent.getStringExtra("body");
+                        Log.d(Constants.TAG, "KEY_FRIEND_REQUEST:" + intent.getStringExtra("body"));
+
+                        if (friendJson != null && !friendJson.isEmpty()) {
+
+                            JsonParser parser = new JsonParser();
+                            JsonElement jsonElement = parser.parse(friendJson);
+
+                            Gson gson = new Gson();
+
+                            Log.i(Constants.TAG, "RETURNED : jsonObject:" + jsonElement.getAsJsonObject().get("friend").toString());
+                            Friend friend = gson.fromJson(
+                                    jsonElement.getAsJsonObject().get("friend"),
+                                    Friend.class
+                            );
+
+                            Log.d(Constants.TAG, "Friend:" + friend.toString());
+
+                            Friend localFriend = null;
+                            Cursor curFriend = getContentResolver().query(ContentUris.withAppendedId(EventsContentProvider.FRIENDS_CONTENT_URI, friend.getId()), null, null, null, null);
+                            if (curFriend != null) {
+                                while (curFriend.moveToNext()) {
+                                    localFriend = Friend.fromCursor(curFriend);
+                                }
+                                curFriend.close();
+                            } // end if
+
+                            if (localFriend != null) {
+                                getContentResolver().update(ContentUris.withAppendedId(FriendsContentProvider.CONTENT_URI, friend.getId()), friend.getContentValues(), null, null);
+                            } else {
+                                getContentResolver().insert(FriendsContentProvider.CONTENT_URI, friend.getContentValues());
+                            }
+                            sendFriendRequestAcceptedNotification(friend);
+                        }
+                    } else if (intent.getBooleanExtra(KEY_SYNC_REQUEST, false)) {
+                        ContentResolver.requestSync(account, EventsContentProvider.AUTHORITY, new Bundle());
+                    } else {
+                        createNotification("Message", "Message Received from Google GCM Server:\n\n"
+                                + extras.get(KEY_MSG_REQUEST));
+                        // ContentResolver.requestSync(account, EventsContentProvider.AUTHORITY, new Bundle());
+                    }
                 }
             }
+            GCMBroadcastReceiver.completeWakefulIntent(intent);
+        } else {
+            //NO ACCOUNT TO HANDLE MSG
+            Log.d(Constants.TAG, "NO ACCOUNT TO HANDLE MSG!");
         }
-        GCMBroadcastReceiver.completeWakefulIntent(intent);
     }
 
     // Creates notification based on title and body received
@@ -234,7 +366,7 @@ public class GCMNotificationIntentService extends IntentService {
         // Set auto cancel
         mNotifyBuilder.setAutoCancel(true);
         // Post a notification
-        mNotificationManager.notify(MESSAGE_NOTIFICATION_ID, mNotifyBuilder.build());
+        mNotificationManager.notify(eventId, mNotifyBuilder.build());
     }
 
     private void sendNewEventNotification(Event event) {
@@ -253,14 +385,14 @@ public class GCMNotificationIntentService extends IntentService {
         joinIntent.setAction(Constants.ACTION_JOIN_EVENT);
         joinIntent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
         joinIntent.putExtra(Constants.PARAM_ACCEPT, true);
-        joinIntent.putExtra(Constants.PARAM_NOTIFICATION_ID, MESSAGE_NOTIFICATION_ID);
+        joinIntent.putExtra(Constants.PARAM_NOTIFICATION_ID, event.getId());
         PendingIntent piJoin = PendingIntent.getService(this, 0, joinIntent, PendingIntent.FLAG_ONE_SHOT);
 
         Intent declineIntent = new Intent(this, ConfirmEventService.class);
         declineIntent.setAction(Constants.ACTION_DECLINE_EVENT);
         declineIntent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
         declineIntent.putExtra(Constants.PARAM_ACCEPT, false);
-        declineIntent.putExtra(Constants.PARAM_NOTIFICATION_ID, MESSAGE_NOTIFICATION_ID);
+        declineIntent.putExtra(Constants.PARAM_NOTIFICATION_ID, event.getId());
         PendingIntent piDecline = PendingIntent.getService(this, 0, declineIntent, PendingIntent.FLAG_ONE_SHOT);
 
         mNotifyBuilder = new NotificationCompat.Builder(this)
@@ -288,11 +420,11 @@ public class GCMNotificationIntentService extends IntentService {
         // Set auto cancel
         mNotifyBuilder.setAutoCancel(true);
         // Post a notification
-        mNotificationManager.notify(MESSAGE_NOTIFICATION_ID, mNotifyBuilder.build());
+        mNotificationManager.notify(event.getId(), mNotifyBuilder.build());
     }
 
     private void sendEventVotingStartedNotification(Event event) {
-        Intent resultIntent = new Intent(this, EventActivity.class);
+        Intent resultIntent = new Intent(this, RateMoviesActivity.class);
         resultIntent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
         PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,
                 resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -321,9 +453,41 @@ public class GCMNotificationIntentService extends IntentService {
         // Set auto cancel
         mNotifyBuilder.setAutoCancel(true);
         // Post a notification
-        mNotificationManager.notify(MESSAGE_NOTIFICATION_ID, mNotifyBuilder.build());
+        mNotificationManager.notify(event.getId(), mNotifyBuilder.build());
     }
 
+    private void sendEventKnockoutNotification(Event event) {
+        Intent resultIntent = new Intent(this, MoviesKnockoutActivity.class);
+        resultIntent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,
+                resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder mNotifyBuilder;
+        NotificationManager mNotificationManager;
+
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        mNotifyBuilder = new NotificationCompat.Builder(this)
+                .setContentTitle(event.getName() + " - Knockout!")
+                .setContentText("Choose a movie!")
+                .setSmallIcon(R.drawable.ic_launcher);
+        // Set pending intent
+        mNotifyBuilder.setContentIntent(resultPendingIntent);
+
+        // Set Vibrate, Sound and Light
+        int defaults = 0;
+        defaults = defaults | Notification.DEFAULT_LIGHTS;
+        defaults = defaults | Notification.DEFAULT_VIBRATE;
+        defaults = defaults | Notification.DEFAULT_SOUND;
+
+        mNotifyBuilder.setDefaults(defaults);
+        // Set the content for Notification
+        //mNotifyBuilder.setContentText("New message from Server");
+        // Set auto cancel
+        mNotifyBuilder.setAutoCancel(true);
+        // Post a notification
+        mNotificationManager.notify(event.getId(), mNotifyBuilder.build());
+    }
 
     private void sendEventWinnerNotification(Event event) {
         Intent resultIntent = new Intent(this, WinnerActivity.class);
@@ -355,6 +519,101 @@ public class GCMNotificationIntentService extends IntentService {
         // Set auto cancel
         mNotifyBuilder.setAutoCancel(true);
         // Post a notification
-        mNotificationManager.notify(MESSAGE_NOTIFICATION_ID, mNotifyBuilder.build());
+        mNotificationManager.notify(event.getId(), mNotifyBuilder.build());
+    }
+
+    private void sendEventCancelledNotification(Event event) {
+        Intent resultIntent = new Intent(this, EventActivity.class);
+        resultIntent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,
+                resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder mNotifyBuilder;
+        NotificationManager mNotificationManager;
+
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        mNotifyBuilder = new NotificationCompat.Builder(this)
+                .setContentTitle(event.getName() + " - was cancelled!")
+                .setSmallIcon(R.drawable.ic_launcher);
+        // Set pending intent
+        mNotifyBuilder.setContentIntent(resultPendingIntent);
+
+        // Set Vibrate, Sound and Light
+        int defaults = 0;
+        defaults = defaults | Notification.DEFAULT_LIGHTS;
+        defaults = defaults | Notification.DEFAULT_VIBRATE;
+        defaults = defaults | Notification.DEFAULT_SOUND;
+
+        mNotifyBuilder.setDefaults(defaults);
+        // Set the content for Notification
+        //mNotifyBuilder.setContentText("New message from Server");
+        // Set auto cancel
+        mNotifyBuilder.setAutoCancel(true);
+        // Post a notification
+        mNotificationManager.notify(event.getId(), mNotifyBuilder.build());
+    }
+
+    private void sendFriendRequestNotification(Friend friend) {
+        Intent resultIntent = new Intent(this, FriendsActivity.class);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,
+                resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder mNotifyBuilder;
+        NotificationManager mNotificationManager;
+
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        mNotifyBuilder = new NotificationCompat.Builder(this)
+                .setContentTitle(friend.getName() + " sent you a Friend Request!")
+                .setContentText("Will you accept?")
+                .setSmallIcon(R.drawable.ic_launcher);
+        // Set pending intent
+        mNotifyBuilder.setContentIntent(resultPendingIntent);
+
+        // Set Vibrate, Sound and Light
+        int defaults = 0;
+        defaults = defaults | Notification.DEFAULT_LIGHTS;
+        defaults = defaults | Notification.DEFAULT_VIBRATE;
+        defaults = defaults | Notification.DEFAULT_SOUND;
+
+        mNotifyBuilder.setDefaults(defaults);
+        // Set the content for Notification
+        //mNotifyBuilder.setContentText("New message from Server");
+        // Set auto cancel
+        mNotifyBuilder.setAutoCancel(true);
+        // Post a notification
+        mNotificationManager.notify(friend.getId(), mNotifyBuilder.build());
+    }
+
+    private void sendFriendRequestAcceptedNotification(Friend friend) {
+        Intent resultIntent = new Intent(this, FriendsActivity.class);
+        PendingIntent resultPendingIntent = PendingIntent.getActivity(this, 0,
+                resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder mNotifyBuilder;
+        NotificationManager mNotificationManager;
+
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        mNotifyBuilder = new NotificationCompat.Builder(this)
+                .setContentTitle(friend.getName() + " accepted your Friend Request!")
+                .setSmallIcon(R.drawable.ic_launcher);
+        // Set pending intent
+        mNotifyBuilder.setContentIntent(resultPendingIntent);
+
+        // Set Vibrate, Sound and Light
+        int defaults = 0;
+        defaults = defaults | Notification.DEFAULT_LIGHTS;
+        defaults = defaults | Notification.DEFAULT_VIBRATE;
+        defaults = defaults | Notification.DEFAULT_SOUND;
+
+        mNotifyBuilder.setDefaults(defaults);
+        // Set the content for Notification
+        //mNotifyBuilder.setContentText("New message from Server");
+        // Set auto cancel
+        mNotifyBuilder.setAutoCancel(true);
+        // Post a notification
+        mNotificationManager.notify(friend.getId(), mNotifyBuilder.build());
     }
 }

@@ -16,57 +16,41 @@
         android:paddingTop="15dp"
         android:paddingBottom="15dp">
 
-        <TextView
-            android:id="@+id/welcome"
-            android:text="Welcome to CineVox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:textColor="#ffffff"
-            android:textSize="20sp"/>
 
-        <Button
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:textColor="#ffffff"
             android:layout_marginLeft="10dp"
-            android:onClick="handleSettings"
             android:background="@android:drawable/ic_menu_preferences"
             android:textSize="20sp"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:textColor="#ffffff"
-            android:background="@android:drawable/ic_dialog_email"
-            android:layout_marginRight="10dp"
-            android:textSize="20sp"/>
     </RelativeLayout>
 
-    <ListView
-        android:id="@+id/listEvents"
+    <Button
+        android:id="@+id/friends"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/new_event_button"
-        android:background="#ffffff"
-        android:dividerHeight="0dp"
-        android:divider="@null"
-        android:layout_below="@id/titleBar">
-
-    </ListView>
+        android:text="Friends"
+        android:textSize="50sp"
+        android:padding="5dp"
+        android:background="#ff877ac3"
+        android:textColor="#ffffff"
+        android:onClick="handleFriends"
+        android:layout_below="@+id/titleBar"
+        android:layout_marginTop="30dp"/>
     
     <Button
         android:id="@+id/new_event_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="+"
+        android:text="Log Out"
         android:textSize="50sp"
         android:padding="5dp"
-        android:background="#f23421"
+        android:background="#ff434ff2"
         android:textColor="#ffffff"
-        android:onClick="handleNewEvent"
+        android:onClick="handleLogOut"
         android:layout_alignParentBottom="true"/>
 
 </RelativeLayout>

@@ -91,7 +91,7 @@ public class NetworkUtil {
     public static final int HTTP_REQUEST_TIMEOUT_MS = 30 * 1000;
     /** Base URL for the API Service */
     public static final String BASE_URL = "http://192.168.1.103:3000";
-    //public static final String BASE_URL = "http://movieselect.herokuapp.com";
+    //public static final String BASE_URL = "http://cinevox.herokuapp.com";
 
     /** URI for authentication service */
     public static final String AUTH_URI = BASE_URL + "/api/auth/facebook/callback";
@@ -100,10 +100,22 @@ public class NetworkUtil {
     public static final String EVENTS_URI = BASE_URL + "/api/events";
     /** URI for events confirm */
     public static final String EVENTS_CONFIRM_URI = "/confirm";
+    /** URI for events cancel */
+    public static final String EVENTS_CANCEL_URI = "/cancel";
+    /** URI for events increase time limit */
+    public static final String EVENTS_TIME_LIMIT_URI = "/time_limit";
+    /** URI for events start */
+    public static final String EVENTS_START_URI = "/start";
     /** URI for events movies vote */
     public static final String EVENTS_VOTE_URI = "/vote";
+    /** URI for events movies knockout */
+    public static final String EVENTS_KNOCKOUT_URI = "/knockout_vote";
     /** URI for friends */
     public static final String FRIENDS_URI = BASE_URL + "/api/friends";
+    /** URI for friend request confirm */
+    public static final String FRIENDS_CONFIRM_REQUEST_URI = "/confirm_friend_request";
+    /** URI for friend request send */
+    public static final String FRIENDS_SEND_REQUEST_URI = "/send_friend_request";
     /** URI for movies */
     public static final String MOVIES_URI = BASE_URL + "/api/movies";
     /** URI for movies search */
@@ -253,6 +265,121 @@ public class NetworkUtil {
     } // end confirmEventJoin()
 
     /**
+     * Connects to server, cancels event.
+     *
+     * @param accessToken
+     * @return flag if successful
+     */
+    public static Event cancelEvent(String accessToken, Integer eventId) {
+        JsonObject jsonObject = new JsonObject();
+
+        jsonObject.add("event", new JsonObject());
+        Log.i(Constants.TAG, "jsonObject:" +  jsonObject.toString());
+
+        try {
+            JsonElement element = NetworkUtil.postWebService(jsonObject, NetworkUtil.EVENTS_URI + "/" + eventId + EVENTS_CANCEL_URI, accessToken);
+            Log.i(Constants.TAG, "result:" + element.toString());
+            if (element != null) {
+                GsonBuilder jsonBuilder = new GsonBuilder();
+                jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                Gson gson = jsonBuilder.create();
+
+                Log.i(Constants.TAG, "RETURNED : jsonObject:" +  element.getAsJsonObject().get("event").toString());
+                Event event = gson.fromJson(
+                        element.getAsJsonObject().get("event"),
+                        Event.class
+                );
+                return event;
+            } else {
+                return null;
+            }
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when canceling event - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when canceling event", e);
+            return null;
+        } // end try-catch
+    } // end cancelEvent()
+
+    /**
+     * Connects to server, starts event.
+     *
+     * @param accessToken
+     * @return flag if successful
+     */
+    public static Event startEvent(String accessToken, Integer eventId) {
+        JsonObject jsonObject = new JsonObject();
+
+        jsonObject.add("event", new JsonObject());
+        Log.i(Constants.TAG, "jsonObject:" +  jsonObject.toString());
+
+        try {
+            JsonElement element = NetworkUtil.postWebService(jsonObject, NetworkUtil.EVENTS_URI + "/" + eventId + EVENTS_START_URI, accessToken);
+            Log.i(Constants.TAG, "result:" + element.toString());
+            if (element != null) {
+                GsonBuilder jsonBuilder = new GsonBuilder();
+                jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                Gson gson = jsonBuilder.create();
+
+                Log.i(Constants.TAG, "RETURNED : jsonObject:" +  element.getAsJsonObject().get("event").toString());
+                Event event = gson.fromJson(
+                        element.getAsJsonObject().get("event"),
+                        Event.class
+                );
+                return event;
+            } else {
+                return null;
+            }
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when starting event - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when starting event", e);
+            return null;
+        } // end try-catch
+    } // end startEvent()
+
+    /**
+     * Connects to server, starts event.
+     *
+     * @param accessToken
+     * @return flag if successful
+     */
+    public static Event increaseEventTimeLimit(String accessToken, Integer eventId) {
+        JsonObject jsonObject = new JsonObject();
+
+        jsonObject.addProperty("time_limit", 30);
+        jsonObject.add("event", new JsonObject());
+        Log.i(Constants.TAG, "jsonObject:" +  jsonObject.toString());
+
+        try {
+            JsonElement element = NetworkUtil.postWebService(jsonObject, NetworkUtil.EVENTS_URI + "/" + eventId + EVENTS_TIME_LIMIT_URI, accessToken);
+            Log.i(Constants.TAG, "result:" + element.toString());
+            if (element != null) {
+                GsonBuilder jsonBuilder = new GsonBuilder();
+                jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                Gson gson = jsonBuilder.create();
+
+                Log.i(Constants.TAG, "RETURNED : jsonObject:" +  element.getAsJsonObject().get("event").toString());
+                Event event = gson.fromJson(
+                        element.getAsJsonObject().get("event"),
+                        Event.class
+                );
+                return event;
+            } else {
+                return null;
+            }
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when increasing time limit for event - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when increasing time limit for starting event", e);
+            return null;
+        } // end try-catch
+    } // end startEvent()
+
+    /**
      * Connects to server, votes for movies.
      *
      * @param accessToken
@@ -302,6 +429,49 @@ public class NetworkUtil {
     } // end voteEventMovies()
 
     /**
+     * Connects to server, votes for movies.
+     *
+     * @param accessToken
+     * @param eventId
+     * @param movieId
+     * @return event
+     */
+    public static Event knockoutEventMovies(String accessToken, Integer eventId, Integer movieId, Integer knockoutId) {
+        JsonObject jsonObject = new JsonObject();
+
+        jsonObject.add("event", new JsonObject());
+        jsonObject.addProperty("movie_id", movieId);
+        jsonObject.addProperty("knockout_id", knockoutId);
+
+        Log.i(Constants.TAG, "jsonObject:" +  jsonObject.toString());
+
+        try {
+            JsonElement element = NetworkUtil.postWebService(jsonObject, NetworkUtil.EVENTS_URI + "/" + eventId + EVENTS_KNOCKOUT_URI, accessToken);
+            Log.i(Constants.TAG, "result:" +  element.toString());
+            if (element != null) {
+                GsonBuilder jsonBuilder = new GsonBuilder();
+                jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                Gson gson = jsonBuilder.create();
+
+                Log.i(Constants.TAG, "RETURNED : jsonObject:" +  element.getAsJsonObject().get("event").toString());
+                Event event = gson.fromJson(
+                        element.getAsJsonObject().get("event"),
+                        Event.class
+                );
+                return event;
+            } else {
+                return null;
+            }
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when voting event knockout - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when voting event knockout", e);
+            return null;
+        } // end try-catch
+    } // end voteEventMovies()
+
+    /**
      * Connects to server, returns friends.
      *
      * @param accessToken
@@ -333,6 +503,78 @@ public class NetworkUtil {
             return null;
         } // end try-catch
     } // end getFriends()
+
+    /**
+     * Connects to server, confirms friend request.
+     *
+     * @param accessToken
+     * @param friendId
+     * @return friend if successful
+     */
+    public static Friend confirmFriendRequest(String accessToken, Integer friendId) {
+        JsonObject jsonObject = new JsonObject();
+
+        jsonObject.add("friend", new JsonObject());
+
+        try {
+            JsonElement element = NetworkUtil.postWebService(jsonObject, NetworkUtil.FRIENDS_URI + "/" + friendId + FRIENDS_CONFIRM_REQUEST_URI, accessToken);
+            Log.i(Constants.TAG, "result:" + element.toString());
+            if (element != null) {
+                Gson gson = new Gson();
+
+                Log.i(Constants.TAG, "RETURNED : jsonObject:" +  element.getAsJsonObject().get("friend").toString());
+                Friend friend = gson.fromJson(
+                        element.getAsJsonObject().get("friend"),
+                        Friend.class
+                );
+                return friend;
+            } else {
+                return null;
+            }
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when confirming friend request - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when confirming friend request", e);
+            return null;
+        } // end try-catch
+    } // end confirmFriendRequest()
+
+    /**
+     * Connects to server, confirms friend request.
+     *
+     * @param accessToken
+     * @param friendId
+     * @return friend if successful
+     */
+    public static Friend sendFriendRequest(String accessToken, Integer friendId) {
+        JsonObject jsonObject = new JsonObject();
+
+        jsonObject.add("friend", new JsonObject());
+
+        try {
+            JsonElement element = NetworkUtil.postWebService(jsonObject, NetworkUtil.FRIENDS_URI + "/" + friendId + FRIENDS_SEND_REQUEST_URI, accessToken);
+            Log.i(Constants.TAG, "result:" + element.toString());
+            if (element != null) {
+                Gson gson = new Gson();
+
+                Log.i(Constants.TAG, "RETURNED : jsonObject:" +  element.getAsJsonObject().get("friend").toString());
+                Friend friend = gson.fromJson(
+                        element.getAsJsonObject().get("friend"),
+                        Friend.class
+                );
+                return friend;
+            } else {
+                return null;
+            }
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when confirming friend request - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when confirming friend request", e);
+            return null;
+        } // end try-catch
+    } // end sendFriendRequest()
 
     /**
      * Connects to server, returns movies by title.

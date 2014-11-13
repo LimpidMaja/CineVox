@@ -1,11 +1,5 @@
 package com.limpidgreen.cinevox;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.accounts.AccountManagerCallback;
-import android.accounts.AccountManagerFuture;
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;
@@ -14,7 +8,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
@@ -28,10 +21,9 @@ import com.facebook.model.GraphUser;
 import com.limpidgreen.cinevox.adapters.EventListAdapter;
 import com.limpidgreen.cinevox.dao.EventsContentProvider;
 import com.limpidgreen.cinevox.model.Event;
+import com.limpidgreen.cinevox.model.Friend;
 import com.limpidgreen.cinevox.util.Constants;
-import com.limpidgreen.cinevox.util.NetworkUtil;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -108,6 +100,16 @@ public class MainActivity extends Activity {
     }
 
     /**
+     * Handle Settings button click in the Main View.
+     *
+     * @param v view
+     */
+    public void handleSettings(View v) {
+        Intent intent = new Intent(this, SettingsActivity.class);
+        startActivityForResult(intent, Constants.SETTINGS_REQUEST_CODE);
+    }
+
+    /**
      * Handle New Event button click in the Main View.
      *
      * @param v view
@@ -116,6 +118,26 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this, NewEventActivity.class);
         startActivity(intent);
     }
+
+    /*
+	 * (non-Javadoc)
+	 *
+	 * @see android.app.Activity#onActivityResult(int, int,
+	 * android.content.Intent)
+	 */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case Constants.SETTINGS_REQUEST_CODE:
+                if (resultCode == Constants.LOG_OUT_RESPONSE_CODE) {
+                    finish();
+                } // end if
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        } // end switch
+    } // end onActivityResult()
 
     public class TableObserver extends ContentObserver {
         boolean selfChange;
