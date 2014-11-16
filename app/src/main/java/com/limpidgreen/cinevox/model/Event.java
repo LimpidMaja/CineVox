@@ -279,7 +279,6 @@ public class Event implements Serializable {
         if (!id.equals(event.id)) return false;
         if (!updatedAt.equals(event.updatedAt)) return false;
 
-        Log.i(Constants.TAG, "eventStatus: " + eventStatus + ", es2:" + event.eventStatus);
         if (eventStatus != null ? (eventStatus.ordinal() != event.eventStatus.ordinal()) : event.eventStatus != null) return false;
 
         if (winner != null ? !winner.getId().equals(event.winner != null ? event.winner.getId() : null) : event.winner != null)
@@ -295,7 +294,9 @@ public class Event implements Serializable {
 
         if (friendAcceptedList.size() != event.friendAcceptedList.size()) return false;
         for (Friend friend : friendAcceptedList) {
-            if (!event.friendAcceptedList.contains(friend)) return false;
+            if (!event.friendAcceptedList.contains(friend)) {
+                return false;
+            }
         } // end for
 
         if (friendDeclinedList.size() != event.friendDeclinedList.size()) return false;

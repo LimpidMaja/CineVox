@@ -31,6 +31,7 @@ import com.limpidgreen.cinevox.adapters.FriendsBarListAdapter;
 import com.limpidgreen.cinevox.adapters.MoviesBarListAdapter;
 import com.limpidgreen.cinevox.dao.EventsContentProvider;
 import com.limpidgreen.cinevox.model.Event;
+import com.limpidgreen.cinevox.model.Friend;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.NetworkUtil;
 
@@ -58,6 +59,7 @@ public class EventActivity extends Activity {
     private Button mWinner;
     private LinearLayout mStartAnyways;
     private LinearLayout mCancelEvent;
+    private LinearLayout mContinueEvent;
 
     private Event mEvent;
 
@@ -75,7 +77,6 @@ public class EventActivity extends Activity {
         } else {
             Bundle bundle = getIntent().getExtras();
             eventId = bundle.getInt(Constants.PARAM_EVENT_ID);
-            Log.i(Constants.TAG, "mEvent: " + mEvent);
 
             if (bundle.getString(Constants.PARAM_EVENT_CONFIRM_STATUS) != null) {
                 if (bundle.getString(Constants.PARAM_EVENT_CONFIRM_STATUS).equals("success")) {
@@ -158,6 +159,7 @@ public class EventActivity extends Activity {
 
         mStartAnyways = (LinearLayout) findViewById(R.id.status_start_anyways);
         mCancelEvent = (LinearLayout) findViewById(R.id.status_cancel_event);
+        mContinueEvent = (LinearLayout) findViewById(R.id.status_continue_event);
 
         eventName.setText(mEvent.getName());
         eventDescription.setText(mEvent.getDescription());
@@ -168,6 +170,10 @@ public class EventActivity extends Activity {
         HListView list = (HListView) findViewById(R.id.listMoviesBar);
         MoviesBarListAdapter adapter = new MoviesBarListAdapter(mEvent.getMovieList(), this);
         list.setAdapter(adapter);
+
+        for (Friend friend : mEvent.getFriendAcceptedList()) {
+            Log.i(Constants.TAG, "FRIEND REMOTE: " + friend.getName() + " confirm: " + friend.isConfirmed() + " req: " + friend.isRequest());
+        }
 
         HListView listFriends = (HListView) findViewById(R.id.listFriendsBar);
         FriendsBarListAdapter adapterFriends = new FriendsBarListAdapter(mEvent.getFriendList(), mEvent.getFriendAcceptedList(), mEvent.getFriendDeclinedList(), this);
@@ -205,6 +211,7 @@ public class EventActivity extends Activity {
                 mWinner.setVisibility(View.GONE);
                 mCancelEvent.setVisibility(View.GONE);
                 mStartAnyways.setVisibility(View.GONE);
+                mContinueEvent.setVisibility(View.GONE);
                 break;
             case CONFIRM:
                 mConfirm.setVisibility(View.VISIBLE);
@@ -215,6 +222,7 @@ public class EventActivity extends Activity {
                 mWinner.setVisibility(View.GONE);
                 mCancelEvent.setVisibility(View.GONE);
                 mStartAnyways.setVisibility(View.GONE);
+                mContinueEvent.setVisibility(View.GONE);
                 break;
             case ADD_MOVIES:
                 mAddMovies.setVisibility(View.VISIBLE);
@@ -225,6 +233,7 @@ public class EventActivity extends Activity {
                 mWinner.setVisibility(View.GONE);
                 mCancelEvent.setVisibility(View.GONE);
                 mStartAnyways.setVisibility(View.GONE);
+                mContinueEvent.setVisibility(View.GONE);
                 break;
             case VOTE:
                 mVote.setVisibility(View.VISIBLE);
@@ -235,6 +244,7 @@ public class EventActivity extends Activity {
                 mWinner.setVisibility(View.GONE);
                 mCancelEvent.setVisibility(View.GONE);
                 mStartAnyways.setVisibility(View.GONE);
+                mContinueEvent.setVisibility(View.GONE);
                 break;
             case KNOCKOUT_CHOOSE:
                 mKnockoutChoose.setVisibility(View.VISIBLE);
@@ -245,6 +255,7 @@ public class EventActivity extends Activity {
                 mWinner.setVisibility(View.GONE);
                 mCancelEvent.setVisibility(View.GONE);
                 mStartAnyways.setVisibility(View.GONE);
+                mContinueEvent.setVisibility(View.GONE);
                 break;
             case WINNER:
                 mWinner.setVisibility(View.VISIBLE);
@@ -255,6 +266,7 @@ public class EventActivity extends Activity {
                 mKnockoutChoose.setVisibility(View.GONE);
                 mCancelEvent.setVisibility(View.GONE);
                 mStartAnyways.setVisibility(View.GONE);
+                mContinueEvent.setVisibility(View.GONE);
                 break;
             case FINISHED:
                 mWinner.setVisibility(View.VISIBLE);
@@ -265,6 +277,7 @@ public class EventActivity extends Activity {
                 mKnockoutChoose.setVisibility(View.GONE);
                 mCancelEvent.setVisibility(View.GONE);
                 mStartAnyways.setVisibility(View.GONE);
+                mContinueEvent.setVisibility(View.GONE);
                 break;
             case DECLINED:
                 mWinner.setVisibility(View.GONE);
@@ -275,6 +288,7 @@ public class EventActivity extends Activity {
                 mKnockoutChoose.setVisibility(View.GONE);
                 mCancelEvent.setVisibility(View.GONE);
                 mStartAnyways.setVisibility(View.GONE);
+                mContinueEvent.setVisibility(View.GONE);
                 break;
             case FAILED:
                 mWinner.setVisibility(View.GONE);
@@ -285,6 +299,7 @@ public class EventActivity extends Activity {
                 mKnockoutChoose.setVisibility(View.GONE);
                 mCancelEvent.setVisibility(View.GONE);
                 mStartAnyways.setVisibility(View.GONE);
+                mContinueEvent.setVisibility(View.GONE);
                 break;
             case START_WITHOUT_ALL:
                 if (mEvent.getFriendAcceptedList().isEmpty()) {
@@ -300,6 +315,18 @@ public class EventActivity extends Activity {
                 mAddMovies.setVisibility(View.GONE);
                 mVote.setVisibility(View.GONE);
                 mKnockoutChoose.setVisibility(View.GONE);
+                mContinueEvent.setVisibility(View.GONE);
+                break;
+            case CONTINUE_WITHOUT_ALL:
+                mContinueEvent.setVisibility(View.VISIBLE);
+                mWinner.setVisibility(View.GONE);
+                mWaitingUsers.setVisibility(View.GONE);
+                mConfirm.setVisibility(View.GONE);
+                mAddMovies.setVisibility(View.GONE);
+                mVote.setVisibility(View.GONE);
+                mKnockoutChoose.setVisibility(View.GONE);
+                mCancelEvent.setVisibility(View.GONE);
+                mStartAnyways.setVisibility(View.GONE);
                 break;
             default:
         }
@@ -351,6 +378,19 @@ public class EventActivity extends Activity {
         mNotificationManager.cancel(mEvent.getId());
 
         CancelEventTask task = new CancelEventTask();
+        task.execute();
+    }
+
+    /**
+     * Handle Continue button click.
+     *
+     * @param v view
+     */
+    public void handleContinueEvent(View v) {
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.cancel(mEvent.getId());
+
+        ContinueEventTask task = new ContinueEventTask();
         task.execute();
     }
 
@@ -471,6 +511,30 @@ public class EventActivity extends Activity {
         toast.show();
     }
 
+    public void onContinueEventResult(Event event) {
+        mEvent = event;
+
+        boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, true);
+        if (result) {
+            Toast toast = Toast.makeText(this,
+                    "Event Continued Successfully!", Toast.LENGTH_SHORT);
+            toast.show();
+
+            updateStatusLayout();
+        } else {
+            Toast toast = Toast.makeText(this,
+                    "There was a problem continuing the event. Try again!", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+
+    }
+
+    public void onContinueEventError() {
+        Toast toast = Toast.makeText(this,
+                "There was a problem continuing the event. Try again!", Toast.LENGTH_SHORT);
+        toast.show();
+    }
+
     public void onStartEventResult(Event event) {
         mEvent = event;
 
@@ -584,6 +648,38 @@ public class EventActivity extends Activity {
             } // end if
         } // end onPostExecute()
     } // end CancelEventTask()
+
+    /**
+     * Create Continue Event Task to send an async call to the server to continue an event.
+     *
+     * @author MajaDobnik
+     *
+     */
+    private class ContinueEventTask extends AsyncTask<Void, Void, Event> {
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#doInBackground(Params[])
+         */
+        @Override
+        protected Event doInBackground(Void... value) {
+            return NetworkUtil.continueEvent(mApplication.getAPIToken(), mEvent.getId());
+        } // end doInBackground()
+
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+         */
+        @Override
+        protected void onPostExecute(Event result) {
+            if (result != null) {
+                onContinueEventResult(result);
+            } else {
+                onContinueEventError();
+            } // end if
+        } // end onPostExecute()
+    } // end ContinueEventTask()
 
     /**
      * Create Start Anyways Event Task to send an async call to the server to start an event.

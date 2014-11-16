@@ -117,7 +117,9 @@ public class FriendsSyncAdapter extends AbstractThreadedSyncAdapter {
                         }
                     }
                     if (!found) {
-                        friendsToDelete.add(localFriend);
+                        if (localFriend.isConfirmed() || localFriend.isRequest()) {
+                            friendsToDelete.add(localFriend);
+                        }
                     }
                 }
             }

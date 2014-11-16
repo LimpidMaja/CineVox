@@ -68,8 +68,6 @@ public class MoviesKnockoutActivity extends Activity {
         } else {
             Bundle bundle = getIntent().getExtras();
             eventId = bundle.getInt(Constants.PARAM_EVENT_ID);
-            Log.i(Constants.TAG, "mEvent: " + mEvent);
-
             if (bundle.getString(Constants.PARAM_EVENT_CONFIRM_STATUS) != null) {
                 if (bundle.getString(Constants.PARAM_EVENT_CONFIRM_STATUS).equals("success")) {
                     Toast toast = Toast.makeText(this,

@@ -10,6 +10,7 @@ package com.limpidgreen.cinevox.adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 
 import com.limpidgreen.cinevox.R;
 import com.limpidgreen.cinevox.model.Friend;
+import com.limpidgreen.cinevox.util.Constants;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 

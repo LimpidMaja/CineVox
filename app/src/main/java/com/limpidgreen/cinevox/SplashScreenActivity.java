@@ -138,7 +138,7 @@ public class SplashScreenActivity extends Activity {
         settingsBundle.putBoolean(
                 ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
         ContentResolver.requestSync(mAccount, EventsContentProvider.AUTHORITY, settingsBundle);
-        ContentResolver.requestSync(mAccount, FriendsContentProvider.AUTHORITY, settingsBundle);
+        //ContentResolver.requestSync(mAccount, FriendsContentProvider.AUTHORITY, settingsBundle);
 
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);

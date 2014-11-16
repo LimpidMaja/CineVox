@@ -18,6 +18,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
+
+import com.limpidgreen.cinevox.util.Constants;
 
 /**
  * Content Provider for Friends.
@@ -96,6 +99,7 @@ public class FriendsContentProvider extends ContentProvider {
     @Override
     public Uri insert(Uri uri, ContentValues values) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
+        Log.i(Constants.TAG, "INSERT FRTIEND");
         int token = URI_MATCHER.match(uri);
         switch (token) {
             case PATH_TOKEN: {

@@ -133,11 +133,11 @@ public class MoviesSelectListAdapter extends BaseAdapter {
             public void onClick(View v) {
                 if (mSelectedMovieList.contains(movie)) {
                     mSelectedMovieList.remove(movie);
-                    mContext.updateSelectedMoviesList(mSelectedMovieList);
+                    mContext.updateSelectedMoviesList();
                     selectIcon.setImageResource(android.R.drawable.ic_menu_add);
                 } else {
                     mSelectedMovieList.add(movie);
-                    mContext.updateSelectedMoviesList(mSelectedMovieList);
+                    mContext.updateSelectedMoviesList();
                     selectIcon.setImageResource(android.R.drawable.btn_minus);
                 }
             }

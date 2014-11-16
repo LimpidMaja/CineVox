@@ -12,9 +12,11 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import com.google.gson.annotations.SerializedName;
 import com.limpidgreen.cinevox.dao.CineVoxDBHelper;
+import com.limpidgreen.cinevox.util.Constants;
 
 import java.io.Serializable;
 import java.sql.Time;

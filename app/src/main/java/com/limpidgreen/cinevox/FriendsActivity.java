@@ -10,11 +10,15 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.limpidgreen.cinevox.adapters.EventListAdapter;
@@ -26,6 +30,7 @@ import com.limpidgreen.cinevox.dao.FriendsContentProvider;
 import com.limpidgreen.cinevox.model.Event;
 import com.limpidgreen.cinevox.model.EventStatus;
 import com.limpidgreen.cinevox.model.Friend;
+import com.limpidgreen.cinevox.model.Movie;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.ExpandableHeightListView;
 import com.limpidgreen.cinevox.util.NetworkUtil;
@@ -40,15 +45,22 @@ public class FriendsActivity extends Activity {
     private ContentResolver mResolver;
     private TableObserver mObserver;
 
+    private SearchFriendsAsyncTask mSearchFriendsAsyncTask;
+
+    private LinearLayout mFriendsLayout;
     private LinearLayout mRequestLayout;
     private LinearLayout mSuggestionsLayout;
+    private LinearLayout mSearchLayout;
 
     private FriendListAdapter adapter;
     private FriendListAdapter adapterRequests;
     private FriendListAdapter adapterSuggestions;
+    private FriendListAdapter adapterSearch;
     private ArrayList<Friend> mFriendList;
     private ArrayList<Friend> mFriendRequestList;
     private ArrayList<Friend> mFriendSuggestionsList;
+    private EditText mSearchFriends;
+    private TextView noResults;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +96,60 @@ public class FriendsActivity extends Activity {
             }
         }
 
+        noResults = (TextView) findViewById(R.id.friends_no_results);
+        mSearchFriends = (EditText) findViewById(R.id.searchFriends);
+        mSearchFriends.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (mSearchFriends.getText().toString().length() > 1) {
+                    if (mSearchFriendsAsyncTask != null) {
+                        mSearchFriendsAsyncTask.cancel(true);
+                    }
+                    mSearchFriendsAsyncTask = new SearchFriendsAsyncTask();
+                    mSearchFriendsAsyncTask.execute();
+
+                    noResults.setVisibility(View.GONE);
+                    mSearchLayout.setVisibility(View.VISIBLE);
+                    mFriendsLayout.setVisibility(View.GONE);
+                    mRequestLayout.setVisibility(View.GONE);
+                    mSuggestionsLayout.setVisibility(View.GONE);
+                } else if (mSearchFriends.getText().toString().length() == 1) {
+                    mSearchLayout.setVisibility(View.VISIBLE);
+                    mFriendsLayout.setVisibility(View.GONE);
+                    mRequestLayout.setVisibility(View.GONE);
+                    mSuggestionsLayout.setVisibility(View.GONE);
+
+                    noResults.setVisibility(View.VISIBLE);
+                    adapterSearch.update(new ArrayList<Friend>());
+                } else if (mSearchFriends.getText().toString().length() == 0) {
+                    mSearchLayout.setVisibility(View.GONE);
+                    mFriendsLayout.setVisibility(View.VISIBLE);
+                    if (mFriendRequestList.isEmpty()) {
+                        mRequestLayout.setVisibility(View.GONE);
+                    } else {
+                        mRequestLayout.setVisibility(View.VISIBLE);
+                    }
+                    if (mFriendSuggestionsList.isEmpty()) {
+                        mSuggestionsLayout.setVisibility(View.GONE);
+                    } else {
+                        mSuggestionsLayout.setVisibility(View.VISIBLE);
+                    }
+                    noResults.setVisibility(View.GONE);
+                    adapterSearch.update(new ArrayList<Friend>());
+                }
+            }
+        });
+
         ExpandableHeightListView list = (ExpandableHeightListView) findViewById(R.id.listFriends);
         adapter = new FriendListAdapter(mFriendList, this);
         list.setAdapter(adapter);
@@ -99,9 +165,16 @@ public class FriendsActivity extends Activity {
         listSuggestion.setAdapter(adapterSuggestions);
         listSuggestion.setExpanded(true);
 
+        ExpandableHeightListView listSearch = (ExpandableHeightListView) findViewById(R.id.listFriendSearch);
+        adapterSearch = new FriendListAdapter(new ArrayList<Friend>(), this);
+        listSearch.setAdapter(adapterSearch);
+        listSearch.setExpanded(true);
+
         ScrollView scrollView = (ScrollView) findViewById(R.id.friendsScrollView);
+        mFriendsLayout = (LinearLayout) findViewById(R.id.friendsLayout);
         mRequestLayout = (LinearLayout) findViewById(R.id.friendRequestsLayout);
         mSuggestionsLayout = (LinearLayout) findViewById(R.id.friendSuggestionsLayout);
+        mSearchLayout = (LinearLayout) findViewById(R.id.friendSearchLayout);
 
         if (mFriendRequestList.isEmpty()) {
             mRequestLayout.setVisibility(View.GONE);
@@ -117,6 +190,31 @@ public class FriendsActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         mResolver.unregisterContentObserver(mObserver);
+    }
+
+    public void updateSearchList(ArrayList<Friend> friends) {
+        if (friends.isEmpty()) {
+            noResults.setVisibility(View.VISIBLE);
+            adapterSearch.update(new ArrayList<Friend>());
+        } else {
+            noResults.setVisibility(View.GONE);
+            for (Friend friend : friends) {
+                Friend localFriend = null;
+                Cursor curFriend = mResolver.query(ContentUris.withAppendedId(FriendsContentProvider.CONTENT_URI, friend.getId()), null, null, null, null);
+                if (curFriend != null) {
+                    while (curFriend.moveToNext()) {
+                        localFriend = Friend.fromCursor(curFriend);
+                    }
+                    curFriend.close();
+                } // end if
+
+                if (localFriend != null) {
+                    friends.remove(friend);
+                    friends.add(localFriend);
+                } // end if
+            } // end for
+            adapterSearch.update(friends);
+        }
     }
 
     public class TableObserver extends ContentObserver {
@@ -277,4 +375,36 @@ public class FriendsActivity extends Activity {
             } // end if
         } // end onPostExecute()
     } // end SendFriendRequestTask()
+
+    /**
+     * Fetches Movie from AutoComplete Web Service.
+     *
+     * @author MajaDobnik
+     *
+     */
+    private class SearchFriendsAsyncTask extends AsyncTask<Void, Void, ArrayList<Friend>> {
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#doInBackground(Params[])
+         */
+        @Override
+        protected ArrayList<Friend> doInBackground(Void... v) {
+            String term = mSearchFriends.getText().toString().trim();
+            return NetworkUtil.getFriendsBySearch(mApplication.getAPIToken(), term);
+        } // end doInBackground()
+
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+         */
+        @Override
+        protected void onPostExecute(ArrayList<Friend> friends) {
+            if (friends != null) {
+                Log.i(Constants.TAG, "FRIENDS: " + friends);
+                updateSearchList(friends);
+            }
+        } // end onPostExecute()
+    } // end SearchFriendsAsyncTask()
 }

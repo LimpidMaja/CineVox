@@ -41,7 +41,7 @@
 
     <ScrollView
         android:id="@+id/friendsScrollView"
-        android:layout_below="@id/titleBar"
+        android:layout_below="@id/search_friends"
         android:layout_width="match_parent"
         android:layout_above="@id/new_event_button"
         android:layout_height="wrap_content">
@@ -50,6 +50,48 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/friendSearchLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:text="Search Results"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#ff3a3251"
+                    android:textColor="#ffffff"
+                    android:padding="5dp"
+                    android:textSize="18sp"/>
+
+                <TextView
+                    android:id="@+id/friends_no_results"
+                    android:visibility="gone"
+                    android:text="No Results"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#ffffff"
+                    android:textColor="#ff3a3251"
+                    android:padding="5dp"
+                    android:textSize="18sp"/>
+
+                <com.limpidgreen.cinevox.util.ExpandableHeightListView
+                    android:id="@+id/listFriendSearch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#ffffff"
+                    android:fadingEdge="none"
+                    android:focusable="false"
+                    android:scrollbars="none"
+                    android:dividerHeight="0dp"
+                    android:divider="@null"
+                    >
+                </com.limpidgreen.cinevox.util.ExpandableHeightListView>
+
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/friendRequestsLayout"
@@ -81,27 +123,34 @@
 
             </LinearLayout>
 
-            <TextView
-                android:text="Friends"
+            <LinearLayout
+                android:id="@+id/friendsLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#ff3a3251"
-                android:textColor="#ffffff"
-                android:padding="5dp"
-                android:textSize="18sp"/>
+                android:orientation="vertical">
 
-            <com.limpidgreen.cinevox.util.ExpandableHeightListView
-                android:id="@+id/listFriends"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="#ffffff"
-                android:fadingEdge="none"
-                android:focusable="false"
-                android:scrollbars="none"
-                android:dividerHeight="0dp"
-                android:divider="@null"
-                >
-            </com.limpidgreen.cinevox.util.ExpandableHeightListView>
+                <TextView
+                    android:text="Friends"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#ff3a3251"
+                    android:textColor="#ffffff"
+                    android:padding="5dp"
+                    android:textSize="18sp"/>
+
+                <com.limpidgreen.cinevox.util.ExpandableHeightListView
+                    android:id="@+id/listFriends"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#ffffff"
+                    android:fadingEdge="none"
+                    android:focusable="false"
+                    android:scrollbars="none"
+                    android:dividerHeight="0dp"
+                    android:divider="@null"
+                    >
+                </com.limpidgreen.cinevox.util.ExpandableHeightListView>
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/friendSuggestionsLayout"
@@ -133,4 +182,35 @@
         </LinearLayout>
     </ScrollView>
 
+    <LinearLayout
+        android:id="@+id/search_friends"
+        android:layout_below="@id/titleBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="5">
+
+        <EditText
+            android:id="@+id/searchFriends"
+            android:layout_width="0dp"
+            android:layout_weight="4.5"
+            android:layout_height="40dp"
+            android:background="#ffd9b8f1"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:paddingLeft="10dp"
+            android:hint="Search for Friends"
+            android:gravity="left|center"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="#552535"
+            android:layout_weight="0.5" >
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:drawable/ic_menu_search"/>
+        </LinearLayout>
+    </LinearLayout>
 </RelativeLayout>

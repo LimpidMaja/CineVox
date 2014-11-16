@@ -63,7 +63,6 @@ public class RateMoviesActivity extends Activity {
         } else {
             Bundle bundle = getIntent().getExtras();
             eventId = bundle.getInt(Constants.PARAM_EVENT_ID);
-            Log.i(Constants.TAG, "mEvent: " + mEvent);
         } // end if-else
 
         if (eventId == null) {

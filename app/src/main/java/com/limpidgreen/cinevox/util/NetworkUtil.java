@@ -90,8 +90,8 @@ public class NetworkUtil {
     /** Request timeout */
     public static final int HTTP_REQUEST_TIMEOUT_MS = 30 * 1000;
     /** Base URL for the API Service */
-    public static final String BASE_URL = "http://192.168.1.103:3000";
-    //public static final String BASE_URL = "http://cinevox.herokuapp.com";
+    //public static final String BASE_URL = "http://192.168.1.103:3000";
+    public static final String BASE_URL = "http://cinevox.herokuapp.com";
 
     /** URI for authentication service */
     public static final String AUTH_URI = BASE_URL + "/api/auth/facebook/callback";
@@ -102,6 +102,8 @@ public class NetworkUtil {
     public static final String EVENTS_CONFIRM_URI = "/confirm";
     /** URI for events cancel */
     public static final String EVENTS_CANCEL_URI = "/cancel";
+    /** URI for events continue */
+    public static final String EVENTS_CONTINUE_URI = "/continue";
     /** URI for events increase time limit */
     public static final String EVENTS_TIME_LIMIT_URI = "/time_limit";
     /** URI for events start */
@@ -120,6 +122,8 @@ public class NetworkUtil {
     public static final String MOVIES_URI = BASE_URL + "/api/movies";
     /** URI for movies search */
     public static final String MOVIES_SEARCH_URI = MOVIES_URI + "/autocomplete";
+    /** URI for friends search */
+    public static final String FRIENDS_SEARCH_URI = FRIENDS_URI + "/autocomplete";
 
     /**
      * Returns true if the Internet connection is available.
@@ -298,6 +302,44 @@ public class NetworkUtil {
             return null;
         } catch (IOException e) {
             Log.e(Constants.TAG, "IOException when canceling event", e);
+            return null;
+        } // end try-catch
+    } // end cancelEvent()
+
+    /**
+     * Connects to server, continues event.
+     *
+     * @param accessToken
+     * @return flag if successful
+     */
+    public static Event continueEvent(String accessToken, Integer eventId) {
+        JsonObject jsonObject = new JsonObject();
+
+        jsonObject.add("event", new JsonObject());
+        Log.i(Constants.TAG, "jsonObject:" +  jsonObject.toString());
+
+        try {
+            JsonElement element = NetworkUtil.postWebService(jsonObject, NetworkUtil.EVENTS_URI + "/" + eventId + EVENTS_CONTINUE_URI, accessToken);
+            Log.i(Constants.TAG, "result:" + element.toString());
+            if (element != null) {
+                GsonBuilder jsonBuilder = new GsonBuilder();
+                jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
+                Gson gson = jsonBuilder.create();
+
+                Log.i(Constants.TAG, "RETURNED : jsonObject:" +  element.getAsJsonObject().get("event").toString());
+                Event event = gson.fromJson(
+                        element.getAsJsonObject().get("event"),
+                        Event.class
+                );
+                return event;
+            } else {
+                return null;
+            }
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when continuing event - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when continuing event", e);
             return null;
         } // end try-catch
     } // end cancelEvent()
@@ -577,6 +619,40 @@ public class NetworkUtil {
     } // end sendFriendRequest()
 
     /**
+     * Connects to server, returns friends by search term.
+     *
+     * @param accessToken
+     * @return list of friends
+     */
+    public static ArrayList<Friend> getFriendsBySearch(String accessToken, String term) {
+        final ArrayList<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+        params.add(new BasicNameValuePair(PARAM_TERM, term));
+        try {
+            JsonObject friendsJson =  getWebService(params, FRIENDS_SEARCH_URI, accessToken).getAsJsonObject();
+            Log.i(Constants.TAG, "FRIENDS RESULT: " + friendsJson.toString());
+            if (friendsJson != null) {
+                Gson gson = new GsonBuilder()
+                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                        .create();
+
+                ArrayList<Friend> FriendsList = gson.fromJson(
+                        friendsJson.get("friends"),
+                        new TypeToken<ArrayList<Friend>>() {
+                        }.getType());
+                return FriendsList;
+            } else {
+                return null;
+            } // end if-else
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when searching friends - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when searching friends", e);
+            return null;
+        } // end try-catch
+    } // end getFriendsBySearch()
+
+    /**
      * Connects to server, returns movies by title.
      *
      * @param accessToken
@@ -610,7 +686,43 @@ public class NetworkUtil {
             Log.e(Constants.TAG, "IOException when searching movies", e);
             return null;
         } // end try-catch
-    } // end getFriends()
+    } // end getMoviesBySearch()
+
+    /**
+     * Connects to server, returns movie lists by term.
+     *
+     * @param accessToken
+     * @return list of movies
+     */
+    public static ArrayList<Movie> getMovieListsBySearch(String accessToken, String term) {
+        final ArrayList<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+        params.add(new BasicNameValuePair(PARAM_TERM, term));
+        try {
+
+            Log.i(Constants.TAG, "MOVIES URI: " + MOVIES_SEARCH_URI);
+            JsonObject moviesJson =  getWebService(params, MOVIES_SEARCH_URI, accessToken).getAsJsonObject();
+            Log.i(Constants.TAG, "MOVIES RESULT: " + moviesJson.toString());
+            if (moviesJson != null) {
+                Gson gson = new GsonBuilder()
+                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                        .create();
+
+                ArrayList<Movie> movieList = gson.fromJson(
+                        moviesJson.get("movies"),
+                        new TypeToken<ArrayList<Movie>>() {
+                        }.getType());
+                return movieList;
+            } else {
+                return null;
+            } // end if-else
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when searching movies - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when searching movies", e);
+            return null;
+        } // end try-catch
+    } // end getMoviesBySearch()
 
     /**
      * Connects to API server, sends post service.

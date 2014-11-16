@@ -93,6 +93,7 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                             Friend friend = Friend.fromCursor(curFriends);
 
                             Integer eventAccepted = curFriends.getInt(curFriends.getColumnIndex(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT));
+                            Log.i(Constants.TAG, "FRIEND LOCAL: " + friend.getName() + " confirm: " + friend.isConfirmed() + " req: " + friend.isRequest() + " EVENT ACC: " + eventAccepted);
                             if (eventAccepted == 0) {
                                 event.getFriendList().add(friend);
                             } else if (eventAccepted == 1) {
@@ -176,6 +177,8 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                 }
             }
 
+            Log.d(Constants.TAG, TAG + "> ............ " );
+
             // See what local events to delete on Local
             ArrayList<Event> eventsToDelete = new ArrayList<Event>();
             for (Event localEvent : localEvents) {
@@ -192,6 +195,7 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                     }
                 }
             }
+            Log.d(Constants.TAG, TAG + "> ............ " );
 
             if (eventsToLocal.size() == 0 && eventsToDelete.size() == 0 && eventsToUpdate.size() == 0) {
                 Log.d(Constants.TAG, TAG + "> No server changes to update local database");
@@ -216,7 +220,6 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                         for (Friend friend : allFriends) {
                             Friend localFriend = null;
                             Cursor curFriend = provider.query(ContentUris.withAppendedId(EventsContentProvider.FRIENDS_CONTENT_URI, friend.getId()), null, null, null, null);
-                            Log.d(Constants.TAG, TAG + "> cur friend:" + curFriend);
                             if (curFriend != null) {
                                 while (curFriend.moveToNext()) {
                                     localFriend = Friend.fromCursor(curFriend);
@@ -225,25 +228,22 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                             } // end if
 
                             if (localFriend == null) {
-                                final ContentProviderOperation.Builder friendBuilder = ContentProviderOperation
-                                        .newInsert(EventsContentProvider.FRIENDS_CONTENT_URI);
-                                friendBuilder.withValues(friend.getContentValues());
-                                batch.add(friendBuilder.build());
+                                provider.insert(EventsContentProvider.FRIENDS_CONTENT_URI, friend.getContentValues());
                             }
 
-                            if (localEvent.getFriendList().contains(localFriend)) {
+                            if (localEvent.getFriendList().contains(friend)) {
                                 batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
                                         .appendPath(FriendsContentProvider.PATH).build())
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 0)
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
-                            } else if (localEvent.getFriendAcceptedList().contains(localFriend)) {
+                            } else if (localEvent.getFriendAcceptedList().contains(friend)) {
                                 batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
-                                    .appendPath(FriendsContentProvider.PATH).build())
-                                    .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
-                                    .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 1)
-                                    .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
-                            } else if (localEvent.getFriendDeclinedList().contains(localFriend)) {
+                                        .appendPath(FriendsContentProvider.PATH).build())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 1)
+                                        .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
+                            } else if (localEvent.getFriendDeclinedList().contains(friend)) {
                                 batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
                                         .appendPath(FriendsContentProvider.PATH).build())
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
@@ -364,19 +364,19 @@ public class EventsSyncAdapter extends AbstractThreadedSyncAdapter {
                                 batch.add(friendBuilder.build());
                             }
 
-                            if (localEvent.getFriendList().contains(localFriend)) {
+                            if (localEvent.getFriendList().contains(friend)) {
                                 batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
                                         .appendPath(FriendsContentProvider.PATH).build())
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 0)
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
-                            } else if (localEvent.getFriendAcceptedList().contains(localFriend)) {
+                            } else if (localEvent.getFriendAcceptedList().contains(friend)) {
                                 batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
                                         .appendPath(FriendsContentProvider.PATH).build())
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_ACCEPT, 1)
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_FRIEND_ID, friend.getId()).build());
-                            } else if (localEvent.getFriendDeclinedList().contains(localFriend)) {
+                            } else if (localEvent.getFriendDeclinedList().contains(friend)) {
                                 batch.add(ContentProviderOperation.newInsert(EventsContentProvider.CONTENT_URI.buildUpon().appendPath(friend.getId().toString())
                                         .appendPath(FriendsContentProvider.PATH).build())
                                         .withValue(CineVoxDBHelper.EVENT_FRIENDS_COL_EVENT_ID, localEvent.getId())

@@ -43,23 +43,17 @@ public class SelectMoviesActivity extends Activity {
     private CineVoxApplication mApplication;
 
     private SearchMoviesAsyncTask mSearchMoviesAsyncTask;
+    private SearchListsAsyncTask mSearchListsAsyncTask;
 
     private ArrayList<Movie> mSelectedMovies;
-
-    private static int prev = -1;
-
-    /** User Account */
-    private Account mAccount;
-    /** Account manager */
-    private AccountManager mAccountManager;
-    /** User Account API Token */
-    private String mAuthToken;
 
     private MoviesBarListAdapter adapter;
 
     private MoviesSelectListAdapter adapterManual;
+    private MoviesSelectListAdapter adapterList;
 
     private EditText mSearchManually;
+    private EditText mSearchList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +106,34 @@ public class SelectMoviesActivity extends Activity {
         adapterManual = new MoviesSelectListAdapter(new ArrayList<Movie>(), mSelectedMovies, this);
         listManually.setAdapter(adapterManual);
 
+        mSearchList = (EditText) findViewById(R.id.searchListMovies);
+        mSearchList.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (mSearchList.getText().toString().length() > 1) {
+                    if (mSearchListsAsyncTask != null) {
+                        mSearchListsAsyncTask.cancel(true);
+                    }
+                    mSearchListsAsyncTask = new SearchListsAsyncTask();
+                    mSearchListsAsyncTask.execute();
+                }
+            }
+        });
+
+        ListView listList = (ListView) findViewById(R.id.listListMovies);
+        adapterList = new MoviesSelectListAdapter(new ArrayList<Movie>(), mSelectedMovies, this);
+        listList.setAdapter(adapterList);
+
 
         //final ExpandableListView listView = (ExpandableListView) findViewById(R.id.expandableList);
         //MoviesSelectExpandableListAdapter adapter = new MoviesSelectExpandableListAdapter(this);
@@ -132,8 +154,11 @@ public class SelectMoviesActivity extends Activity {
         adapterManual.updateList(movies);
     }
 
-    public void updateSelectedMoviesList(ArrayList<Movie> movies) {
-       // adapter.updateList(movies);
+    public void updateListSearchList(ArrayList<Movie> movies) {
+        adapterList.updateList(movies);
+    }
+
+    public void updateSelectedMoviesList() {
         adapter.notifyDataSetChanged();
     }
 
@@ -182,4 +207,38 @@ public class SelectMoviesActivity extends Activity {
             }
         } // end onPostExecute()
     } // end SearchMoviesAsyncTask()
+
+    /**
+     * Fetches Movie Lists from AutoComplete Web Service.
+     *
+     * @author MajaDobnik
+     *
+     */
+    private class SearchListsAsyncTask extends AsyncTask<Void, Void, ArrayList<Movie>> {
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#doInBackground(Params[])
+         */
+        @Override
+        protected ArrayList<Movie> doInBackground(Void... v) {
+            String term = mSearchList.getText().toString().trim();
+            Log.i(Constants.TAG, "TOKEN:" + mApplication.getAPIToken());
+
+            return NetworkUtil.getMovieListsBySearch(mApplication.getAPIToken(), term);
+        } // end doInBackground()
+
+        /*
+         * (non-Javadoc)
+         *
+         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
+         */
+        @Override
+        protected void onPostExecute(ArrayList<Movie> movies) {
+            if (movies != null) {
+                Log.i(Constants.TAG, "MOVIES: " + movies);
+                updateListSearchList(movies);
+            }
+        } // end onPostExecute()
+    } // end SearchListsAsyncTask()
 }

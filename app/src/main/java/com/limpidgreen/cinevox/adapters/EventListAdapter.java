@@ -233,6 +233,17 @@ public class EventListAdapter extends BaseAdapter {
                     }
                 });
                 break;
+            case CONTINUE_WITHOUT_ALL:
+                eventStatusButton.setText("Continue?");
+                eventStatusButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(mContext, EventActivity.class);
+                        intent.putExtra(Constants.PARAM_EVENT_ID, event.getId());
+                        mContext.startActivity(intent);
+                    }
+                });
+                break;
             default:
         }
 

@@ -45,7 +45,10 @@ public enum EventStatus {
     FAILED(8, "failed"),
 
     @SerializedName("start_without_all")
-    START_WITHOUT_ALL(9, "start_without_all");
+    START_WITHOUT_ALL(9, "start_without_all"),
+
+    @SerializedName("continue_without_all")
+    CONTINUE_WITHOUT_ALL(10, "continue_without_all");
 
     private String type;
     private Integer id;
@@ -92,6 +95,8 @@ public enum EventStatus {
                 return FAILED;
             case 9:
                 return START_WITHOUT_ALL;
+            case 10:
+                return CONTINUE_WITHOUT_ALL;
         }
         return null;
     }
