@@ -19,6 +19,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.limpidgreen.cinevox.adapters.MoviesBarListAdapter;
@@ -55,6 +56,9 @@ public class SelectMoviesActivity extends Activity {
     private EditText mSearchManually;
     private EditText mSearchList;
 
+    private LinearLayout mManualLayout;
+    private LinearLayout mListLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +82,7 @@ public class SelectMoviesActivity extends Activity {
             mApplication.startAuthTokenFetch(this);
         }
 
+        mManualLayout = (LinearLayout) findViewById(R.id.select_movies_manually_layout);
         mSearchManually = (EditText) findViewById(R.id.searchManualMovies);
         mSearchManually.addTextChangedListener(new TextWatcher() {
             @Override
@@ -106,6 +111,7 @@ public class SelectMoviesActivity extends Activity {
         adapterManual = new MoviesSelectListAdapter(new ArrayList<Movie>(), mSelectedMovies, this);
         listManually.setAdapter(adapterManual);
 
+        mListLayout = (LinearLayout) findViewById(R.id.select_movies_list_layout);
         mSearchList = (EditText) findViewById(R.id.searchListMovies);
         mSearchList.addTextChangedListener(new TextWatcher() {
             @Override
@@ -148,6 +154,17 @@ public class SelectMoviesActivity extends Activity {
                 prev = groupPosition;
             }
         });*/
+    }
+
+    public void handleShowMoviesManually(View v) {
+        mListLayout.setVisibility(View.GONE);
+        mManualLayout.setVisibility(View.VISIBLE);
+    }
+
+    public void handleShowMoviesList(View v) {
+        mListLayout.setVisibility(View.VISIBLE);
+        mManualLayout.setVisibility(View.GONE);
+
     }
 
     public void updateManualSearchList(ArrayList<Movie> movies) {

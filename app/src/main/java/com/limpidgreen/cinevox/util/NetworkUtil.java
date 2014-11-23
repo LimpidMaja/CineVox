@@ -90,8 +90,8 @@ public class NetworkUtil {
     /** Request timeout */
     public static final int HTTP_REQUEST_TIMEOUT_MS = 30 * 1000;
     /** Base URL for the API Service */
-    //public static final String BASE_URL = "http://192.168.1.103:3000";
-    public static final String BASE_URL = "http://cinevox.herokuapp.com";
+    public static final String BASE_URL = "http://192.168.1.103:3000";
+    //public static final String BASE_URL = "http://cinevox.herokuapp.com";
 
     /** URI for authentication service */
     public static final String AUTH_URI = BASE_URL + "/api/auth/facebook/callback";
@@ -122,6 +122,8 @@ public class NetworkUtil {
     public static final String MOVIES_URI = BASE_URL + "/api/movies";
     /** URI for movies search */
     public static final String MOVIES_SEARCH_URI = MOVIES_URI + "/autocomplete";
+    /** URI for movies search */
+    public static final String MOVIES_SEARCH_LISTS_URI = MOVIES_URI + "/search_lists";
     /** URI for friends search */
     public static final String FRIENDS_SEARCH_URI = FRIENDS_URI + "/autocomplete";
 
@@ -699,8 +701,8 @@ public class NetworkUtil {
         params.add(new BasicNameValuePair(PARAM_TERM, term));
         try {
 
-            Log.i(Constants.TAG, "MOVIES URI: " + MOVIES_SEARCH_URI);
-            JsonObject moviesJson =  getWebService(params, MOVIES_SEARCH_URI, accessToken).getAsJsonObject();
+            Log.i(Constants.TAG, "MOVIES URI: " + MOVIES_SEARCH_LISTS_URI);
+            JsonObject moviesJson =  getWebService(params, MOVIES_SEARCH_LISTS_URI, accessToken).getAsJsonObject();
             Log.i(Constants.TAG, "MOVIES RESULT: " + moviesJson.toString());
             if (moviesJson != null) {
                 Gson gson = new GsonBuilder()

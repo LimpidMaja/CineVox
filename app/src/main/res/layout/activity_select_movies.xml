@@ -54,6 +54,7 @@
                 android:padding="10dp"
                 android:textSize="14sp"
                 android:textColor="#FFFFFF"
+                android:onClick="handleShowMoviesManually"
                 android:background="#ffa172f1"
                 android:layout_margin="1dp"/>
 
@@ -66,6 +67,7 @@
                 android:padding="10dp"
                 android:textSize="14sp"
                 android:textColor="#FFFFFF"
+                android:onClick="handleShowMoviesList"
                 android:background="#ffd9b8f1"
                 android:layout_margin="1dp" />
 
