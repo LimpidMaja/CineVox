@@ -8,8 +8,6 @@
  */
 package com.limpidgreen.cinevox;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -18,14 +16,17 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ExpandableListView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.limpidgreen.cinevox.adapters.MoviesBarListAdapter;
+import com.limpidgreen.cinevox.adapters.MoviesSelect4ListAdapter;
 import com.limpidgreen.cinevox.adapters.MoviesSelectListAdapter;
-import com.limpidgreen.cinevox.model.Friend;
 import com.limpidgreen.cinevox.model.Movie;
+import com.limpidgreen.cinevox.model.MovieList;
 import com.limpidgreen.cinevox.util.Constants;
 import com.limpidgreen.cinevox.util.NetworkUtil;
 
@@ -51,7 +52,7 @@ public class SelectMoviesActivity extends Activity {
     private MoviesBarListAdapter adapter;
 
     private MoviesSelectListAdapter adapterManual;
-    private MoviesSelectListAdapter adapterList;
+    private MoviesSelect4ListAdapter adapterList;
 
     private EditText mSearchManually;
     private EditText mSearchList;
@@ -113,19 +114,10 @@ public class SelectMoviesActivity extends Activity {
 
         mListLayout = (LinearLayout) findViewById(R.id.select_movies_list_layout);
         mSearchList = (EditText) findViewById(R.id.searchListMovies);
-        mSearchList.addTextChangedListener(new TextWatcher() {
+        Button movieListSearchButton = (Button) findViewById(R.id.movie_list_search_button);
+        movieListSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
+            public void onClick(View v) {
                 if (mSearchList.getText().toString().length() > 1) {
                     if (mSearchListsAsyncTask != null) {
                         mSearchListsAsyncTask.cancel(true);
@@ -136,8 +128,8 @@ public class SelectMoviesActivity extends Activity {
             }
         });
 
-        ListView listList = (ListView) findViewById(R.id.listListMovies);
-        adapterList = new MoviesSelectListAdapter(new ArrayList<Movie>(), mSelectedMovies, this);
+        ExpandableListView listList = (ExpandableListView) findViewById(R.id.listListMovies);
+        adapterList = new MoviesSelect4ListAdapter(new ArrayList<MovieList>(), mSelectedMovies, this);
         listList.setAdapter(adapterList);
 
 
@@ -171,8 +163,8 @@ public class SelectMoviesActivity extends Activity {
         adapterManual.updateList(movies);
     }
 
-    public void updateListSearchList(ArrayList<Movie> movies) {
-        adapterList.updateList(movies);
+    public void updateListSearchList(ArrayList<MovieList> movieLists) {
+        adapterList.updateList(movieLists);
     }
 
     public void updateSelectedMoviesList() {
@@ -231,14 +223,14 @@ public class SelectMoviesActivity extends Activity {
      * @author MajaDobnik
      *
      */
-    private class SearchListsAsyncTask extends AsyncTask<Void, Void, ArrayList<Movie>> {
+    private class SearchListsAsyncTask extends AsyncTask<Void, Void, ArrayList<MovieList>> {
         /*
          * (non-Javadoc)
          *
          * @see android.os.AsyncTask#doInBackground(Params[])
          */
         @Override
-        protected ArrayList<Movie> doInBackground(Void... v) {
+        protected ArrayList<MovieList> doInBackground(Void... v) {
             String term = mSearchList.getText().toString().trim();
             Log.i(Constants.TAG, "TOKEN:" + mApplication.getAPIToken());
 
@@ -251,7 +243,7 @@ public class SelectMoviesActivity extends Activity {
          * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
          */
         @Override
-        protected void onPostExecute(ArrayList<Movie> movies) {
+        protected void onPostExecute(ArrayList<MovieList> movies) {
             if (movies != null) {
                 Log.i(Constants.TAG, "MOVIES: " + movies);
                 updateListSearchList(movies);

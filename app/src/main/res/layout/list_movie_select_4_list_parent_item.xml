@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/movieBarListItem"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    android:background="#ffd9b8f1"
+    android:layout_marginTop="2dp">
+
+    <LinearLayout
+        android:layout_marginTop="2dp"
+        android:focusable="false"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@id/edit_layout"
+        android:layout_alignParentLeft="true"
+        android:background="#F5F5F5"
+        android:gravity="left|center_vertical"
+        android:textAlignment="center"
+        android:paddingTop="5dp"
+        android:minHeight="50dp"
+        android:paddingBottom="5dp"
+        android:paddingLeft="?android:attr/expandableListPreferredItemPaddingLeft"
+        android:orientation="vertical">
+
+        <TextView
+            android:focusable="false"
+            android:id="@+id/list_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#6C6C6C"
+            android:textSize="20sp"
+            android:textAlignment="center"
+            android:text="Cannes 2014"
+            android:textStyle="bold"
+            android:typeface="sans" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_marginTop="2dp"
+        android:focusable="false"
+        android:id="@+id/edit_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="#ffd9b8f1"
+        android:layout_alignParentRight="true">
+
+        <RelativeLayout
+            android:focusable="false"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:background="#ffd9b8f1"
+            android:layout_marginLeft="2dp">
+
+            <ImageView
+                android:focusable="false"
+                android:id="@+id/select_icon"
+                android:layout_width="50dp"
+                android:layout_height="match_parent"
+                android:layout_centerInParent="true"
+                android:padding="5dp"
+                android:src="@android:drawable/ic_menu_add"
+                />
+        </RelativeLayout>
+    </LinearLayout>
+
+</RelativeLayout>

@@ -78,7 +78,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#ffd9b8f1"
-            android:visibility="visible"
+            android:visibility="gone"
             android:orientation="vertical">
 
             <LinearLayout
@@ -92,7 +92,7 @@
                 <EditText
                     android:id="@+id/searchManualMovies"
                     android:layout_width="0dp"
-                    android:layout_weight="4.5"
+                    android:layout_weight="5"
                     android:layout_height="40dp"
                     android:background="#ffe5d3f1"
                     android:textColor="#ffffff"
@@ -101,16 +101,7 @@
                     android:hint="Search for Movies"
                     android:gravity="left|center"/>
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:background="#552535"
-                    android:layout_weight="0.5" >
-                    <Button
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@android:drawable/ic_menu_search"/>
-                </LinearLayout>
+
             </LinearLayout>
 
             <ListView
@@ -131,7 +122,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:background="#ffd9b8f1"
-            android:visibility="gone"
+            android:visibility="visible"
             android:orientation="vertical">
 
             <LinearLayout
@@ -160,21 +151,20 @@
                     android:background="#552535"
                     android:layout_weight="0.5" >
                     <Button
+                        android:id="@+id/movie_list_search_button"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:background="@android:drawable/ic_menu_search"/>
                 </LinearLayout>
             </LinearLayout>
 
-            <ListView
+            <ExpandableListView
                 android:id="@+id/listListMovies"
                 android:background="#ffffff"
                 android:dividerHeight="0dp"
                 android:divider="@null"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-            </ListView>
+                android:layout_height="match_parent"
+                android:layout_width="match_parent"/>
 
         </LinearLayout>
 

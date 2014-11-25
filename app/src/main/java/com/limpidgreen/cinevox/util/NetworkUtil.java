@@ -28,6 +28,7 @@ import com.limpidgreen.cinevox.exception.APICallException;
 import com.limpidgreen.cinevox.model.Event;
 import com.limpidgreen.cinevox.model.Friend;
 import com.limpidgreen.cinevox.model.Movie;
+import com.limpidgreen.cinevox.model.MovieList;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -90,8 +91,8 @@ public class NetworkUtil {
     /** Request timeout */
     public static final int HTTP_REQUEST_TIMEOUT_MS = 30 * 1000;
     /** Base URL for the API Service */
-    public static final String BASE_URL = "http://192.168.1.103:3000";
-    //public static final String BASE_URL = "http://cinevox.herokuapp.com";
+    //public static final String BASE_URL = "http://192.168.1.103:3000";
+    public static final String BASE_URL = "http://cinevox.herokuapp.com";
 
     /** URI for authentication service */
     public static final String AUTH_URI = BASE_URL + "/api/auth/facebook/callback";
@@ -694,9 +695,9 @@ public class NetworkUtil {
      * Connects to server, returns movie lists by term.
      *
      * @param accessToken
-     * @return list of movies
+     * @return list of movie lists
      */
-    public static ArrayList<Movie> getMovieListsBySearch(String accessToken, String term) {
+    public static ArrayList<MovieList> getMovieListsBySearch(String accessToken, String term) {
         final ArrayList<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
         params.add(new BasicNameValuePair(PARAM_TERM, term));
         try {
@@ -709,9 +710,9 @@ public class NetworkUtil {
                         .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
                         .create();
 
-                ArrayList<Movie> movieList = gson.fromJson(
-                        moviesJson.get("movies"),
-                        new TypeToken<ArrayList<Movie>>() {
+                ArrayList<MovieList> movieList = gson.fromJson(
+                        moviesJson.get("lists"),
+                        new TypeToken<ArrayList<MovieList>>() {
                         }.getType());
                 return movieList;
             } else {
