@@ -40,6 +40,19 @@
         android:onClick="handleFriends"
         android:layout_below="@+id/titleBar"
         android:layout_marginTop="30dp"/>
+
+    <Button
+        android:id="@+id/trakt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Trakt"
+        android:textSize="50sp"
+        android:padding="5dp"
+        android:background="#ff8c52c3"
+        android:textColor="#ffffff"
+        android:onClick="handleTrakt"
+        android:layout_below="@+id/friends"
+        android:layout_marginTop="30dp"/>
     
     <Button
         android:id="@+id/new_event_button"

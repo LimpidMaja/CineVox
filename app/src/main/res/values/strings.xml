@@ -4,6 +4,7 @@
     <string name="app_name">CineVox</string>
     <string name="provider_name_events">Events</string>
     <string name="provider_name_friends">Friends</string>
+    <string name="provider_name_user">User</string>
     <string name="app_id">231004317105383</string>
     <!--APP 243960519143096-->
     <!--HEROKU 231004317105383-->
@@ -30,6 +31,7 @@
     <string name="event_details">Event Details</string>
     <string name="settings">Settings</string>
     <string name="friends">Friends</string>
+    <string name="trakt">Trakt</string>
 
     <!-- LOG OUT -->
     <string name="menu_item_log_out">Log out</string>
@@ -37,4 +39,11 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
 
+    <!-- MOVIES SORT -->
+    <string-array name="sort_array">
+        <item>Title</item>
+        <item>Rating</item>
+        <item>Date Added</item>
+        <item>Release Date</item>
+    </string-array>
 </resources>

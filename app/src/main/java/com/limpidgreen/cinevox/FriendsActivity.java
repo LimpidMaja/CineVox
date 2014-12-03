@@ -1,6 +1,7 @@
 package com.limpidgreen.cinevox;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Intent;
@@ -44,6 +45,9 @@ public class FriendsActivity extends Activity {
 
     private ContentResolver mResolver;
     private TableObserver mObserver;
+    private ProgressDialog mProgressDialog = null;
+    private SendFriendRequestTask mSendFriendRequestTask;
+    private ConfirmFriendRequestTask mConfirmFriendRequestTask;
 
     private SearchFriendsAsyncTask mSearchFriendsAsyncTask;
 
@@ -114,6 +118,8 @@ public class FriendsActivity extends Activity {
                 if (mSearchFriends.getText().toString().length() > 1) {
                     if (mSearchFriendsAsyncTask != null) {
                         mSearchFriendsAsyncTask.cancel(true);
+                    } else {
+                        showProgress("Searching...");
                     }
                     mSearchFriendsAsyncTask = new SearchFriendsAsyncTask();
                     mSearchFriendsAsyncTask.execute();
@@ -191,6 +197,24 @@ public class FriendsActivity extends Activity {
         super.onDestroy();
         mResolver.unregisterContentObserver(mObserver);
     }
+
+    /**
+     * Shows the progress UI for a lengthy operation.
+     */
+    private void showProgress(String msg) {
+        mProgressDialog = ProgressDialog.show(this, null,
+                msg, true, true, null);
+    } // end showProgress()
+
+    /**
+     * Hides the progress UI for a lengthy operation.
+     */
+    private void hideProgress() {
+        if (mProgressDialog != null) {
+            mProgressDialog.dismiss();
+            mProgressDialog = null;
+        } // end if
+    } // end hideProgress()
 
     public void updateSearchList(ArrayList<Friend> friends) {
         if (friends.isEmpty()) {
@@ -275,6 +299,8 @@ public class FriendsActivity extends Activity {
     }
 
     public void onFriendConfirmRequestResult(Friend friend) {
+        mConfirmFriendRequestTask = null;
+        hideProgress();
         mResolver.update(ContentUris.withAppendedId(FriendsContentProvider.CONTENT_URI, friend.getId()), friend.getContentValues(), null, null);
         Toast toast = Toast.makeText(this,
                     "You confirmed the request Successfully!", Toast.LENGTH_SHORT);
@@ -282,17 +308,24 @@ public class FriendsActivity extends Activity {
     }
 
     public void onFriendConfirmRequestError() {
+        mConfirmFriendRequestTask = null;
+        hideProgress();
         Toast toast = Toast.makeText(this,
                 "There was a problem confirming the friend request. Try again!", Toast.LENGTH_SHORT);
         toast.show();
     }
 
     public void confirmFriendRequest(Integer friendId) {
-        ConfirmFriendRequestTask task = new ConfirmFriendRequestTask();
-        task.execute(friendId);
+        if (mConfirmFriendRequestTask == null) {
+            showProgress("Sending Confirmation");
+            mConfirmFriendRequestTask = new ConfirmFriendRequestTask();
+            mConfirmFriendRequestTask.execute(friendId);
+        }
     }
 
     public void onFriendSendRequestResult(Friend friend) {
+        mSendFriendRequestTask = null;
+        hideProgress();
         mResolver.update(ContentUris.withAppendedId(FriendsContentProvider.CONTENT_URI, friend.getId()), friend.getContentValues(), null, null);
         Toast toast = Toast.makeText(this,
                 "You sent the request Successfully!", Toast.LENGTH_SHORT);
@@ -300,14 +333,20 @@ public class FriendsActivity extends Activity {
     }
 
     public void onFriendSemdRequestError() {
+        mSendFriendRequestTask = null;
+        hideProgress();
+
         Toast toast = Toast.makeText(this,
                 "There was a problem sending the friend request. Try again!", Toast.LENGTH_SHORT);
         toast.show();
     }
 
     public void sendFriendRequest(Integer friendId) {
-        SendFriendRequestTask task = new SendFriendRequestTask();
-        task.execute(friendId);
+        if (mSendFriendRequestTask == null) {
+            showProgress("Sending Request");
+            mSendFriendRequestTask = new SendFriendRequestTask();
+            mSendFriendRequestTask.execute(friendId);
+        }
     }
 
     /**
@@ -401,6 +440,8 @@ public class FriendsActivity extends Activity {
          */
         @Override
         protected void onPostExecute(ArrayList<Friend> friends) {
+            mSearchFriendsAsyncTask = null;
+            hideProgress();
             if (friends != null) {
                 Log.i(Constants.TAG, "FRIENDS: " + friends);
                 updateSearchList(friends);

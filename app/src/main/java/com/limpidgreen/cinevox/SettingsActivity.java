@@ -26,6 +26,7 @@ import com.facebook.model.GraphUser;
 import com.limpidgreen.cinevox.adapters.EventListAdapter;
 import com.limpidgreen.cinevox.dao.CineVoxDBHelper;
 import com.limpidgreen.cinevox.dao.EventsContentProvider;
+import com.limpidgreen.cinevox.dao.FriendsContentProvider;
 import com.limpidgreen.cinevox.model.Event;
 import com.limpidgreen.cinevox.util.Constants;
 
@@ -54,7 +55,7 @@ public class SettingsActivity extends Activity {
     }
 
     /**
-     * Handle Friends button click in the Main View.
+     * Handle Friends button click in the Settings View.
      *
      * @param v view
      */
@@ -63,6 +64,15 @@ public class SettingsActivity extends Activity {
         startActivity(intent);
     }
 
+    /**
+     * Handle Trakt button click in the Settings View.
+     *
+     * @param v view
+     */
+    public void handleTrakt(View v) {
+        Intent intent = new Intent(this, TraktActivity.class);
+        startActivity(intent);
+    }
 
     public void handleLogOut(View v) {
         DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
@@ -77,6 +87,10 @@ public class SettingsActivity extends Activity {
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
                     case DialogInterface.BUTTON_POSITIVE:
+                        ContentResolver mResolver = getContentResolver();
+                        mResolver.delete(EventsContentProvider.CONTENT_URI, null, null);
+                        mResolver.delete(FriendsContentProvider.CONTENT_URI, null, null);
+
                         mContext.deleteDatabase(CineVoxDBHelper.DATABASE_NAME);
 
                         AccountManager mAccountManager = AccountManager.get(mContext);

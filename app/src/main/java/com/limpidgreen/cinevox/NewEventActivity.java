@@ -10,7 +10,9 @@ package com.limpidgreen.cinevox;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
+import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -70,6 +72,9 @@ public class NewEventActivity extends Activity {
     private Button mTimePickerButton;
     private MoviesBarListAdapter mAdapterMovies;
     private FriendsBarListAdapter mAdapterFriends;
+    /** Keep track of the progress dialog so we can dismiss it */
+    private ProgressDialog mProgressDialog = null;
+    private CreateEventTask mCreateEventTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -210,6 +215,32 @@ public class NewEventActivity extends Activity {
         startActivityForResult(intent, Constants.EVENT_VOTING_EDIT_REQUEST_CODE);
     }
 
+    /**
+     * Shows the progress UI for a lengthy operation.
+     */
+    private void showProgress() {
+        mProgressDialog = ProgressDialog.show(this, null,
+                "Creating Event", true, true,
+                new DialogInterface.OnCancelListener() {
+                    public void onCancel(DialogInterface dialog) {
+                        if (mCreateEventTask != null) {
+                            mCreateEventTask.cancel(true);
+                        } // end if
+                    } // end onCancel()
+                }
+        );
+    } // end showProgress()
+
+    /**
+     * Hides the progress UI for a lengthy operation.
+     */
+    private void hideProgress() {
+        if (mProgressDialog != null) {
+            mProgressDialog.dismiss();
+            mProgressDialog = null;
+        } // end if
+    } // end hideProgress()
+
     /*
 	 * (non-Javadoc)
 	 *
@@ -297,8 +328,11 @@ public class NewEventActivity extends Activity {
                 toast.show();
                 return;
             }
-
-            new CreateEventTask().execute();
+            if (mCreateEventTask == null) {
+                showProgress();
+                mCreateEventTask = new CreateEventTask();
+                mCreateEventTask.execute();
+            } // end if
         } else {
             Toast toast = Toast.makeText(this,
                     "Missing fields!",
@@ -308,6 +342,9 @@ public class NewEventActivity extends Activity {
     }
 
     public void onCreateEventResult(JsonElement element) {
+        hideProgress();
+        mCreateEventTask = null;
+
         GsonBuilder jsonBuilder = new GsonBuilder();
         jsonBuilder.registerTypeAdapter(Event.class, new Event.EventDeserializer());
         Gson gson = jsonBuilder.create();
@@ -334,6 +371,8 @@ public class NewEventActivity extends Activity {
     }
 
     public void onCreateEventError() {
+        hideProgress();
+        mCreateEventTask = null;
         Toast toast = Toast.makeText(this,
                 "There was a problem creating the event. Try again!", Toast.LENGTH_SHORT);
         toast.show();

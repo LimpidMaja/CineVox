@@ -44,6 +44,7 @@ public class MoviesRateListAdapter extends BaseAdapter {
     private Event mEvent;
     private HashMap<Movie, Integer> mRatedMovieMap;
     private Integer mPointsUsed;
+    private Integer maxRating;
 
     /**
      * Constructor.
@@ -57,6 +58,7 @@ public class MoviesRateListAdapter extends BaseAdapter {
         inflater = (LayoutInflater) mContext
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mRatedMovieMap = new HashMap<Movie, Integer>(event.getNumVotesPerUser());
+        maxRating = mEvent.getFriendAcceptedList().size() + 1;
         if (VotingRange.ONE_TO_TEN.equals(mEvent.getVotingRange())) {
             mPointsUsed = 0;
         } // end if
@@ -121,7 +123,11 @@ public class MoviesRateListAdapter extends BaseAdapter {
                 .showImageOnFail(android.R.drawable.ic_menu_crop)
                 .bitmapConfig(Bitmap.Config.RGB_565).build();
 
-        ImageLoader.getInstance().displayImage(movie.getPoster(), moviePoster, mOptions);
+        if (movie.getPoster().contains("original")) {
+            ImageLoader.getInstance().displayImage(movie.getPoster().replace("original", "w92"), moviePoster, mOptions);
+        } else {
+            ImageLoader.getInstance().displayImage(movie.getPoster(), moviePoster, mOptions);
+        } // end if-else
 
         title.setText(movie.getTitle());
 
@@ -131,6 +137,41 @@ public class MoviesRateListAdapter extends BaseAdapter {
             final ImageView star3 = (ImageView) vi.findViewById(R.id.movie_star_3);
             final ImageView star4 = (ImageView) vi.findViewById(R.id.movie_star_4);
             final ImageView star5 = (ImageView) vi.findViewById(R.id.movie_star_5);
+
+            if (maxRating < 5) {
+                star5.setVisibility(View.GONE);
+                if (maxRating < 4) {
+                    star4.setVisibility(View.GONE);
+                } // end if
+                if (maxRating < 3) {
+                    star3.setVisibility(View.GONE);
+                } // end if
+            } // end if
+
+            Integer rating = mRatedMovieMap.get(movie);
+            if (rating == null || rating == 0) {
+                star1.setImageResource(android.R.drawable.star_off);
+                star2.setImageResource(android.R.drawable.star_off);
+                star3.setImageResource(android.R.drawable.star_off);
+                star4.setImageResource(android.R.drawable.star_off);
+                star5.setImageResource(android.R.drawable.star_off);
+            } else {
+                if (rating > 0) {
+                    star1.setImageResource(android.R.drawable.btn_star_big_on);
+                } // end if
+                if (rating > 1) {
+                    star2.setImageResource(android.R.drawable.btn_star_big_on);
+                } // end if
+                if (rating > 2) {
+                    star3.setImageResource(android.R.drawable.btn_star_big_on);
+                } // end if
+                if (rating > 3) {
+                    star4.setImageResource(android.R.drawable.btn_star_big_on);
+                } // end if
+                if (rating > 4) {
+                    star5.setImageResource(android.R.drawable.btn_star_big_on);
+                } // end if
+            } // end if-else
 
             vi.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -238,26 +279,34 @@ public class MoviesRateListAdapter extends BaseAdapter {
             final TextView pointsTxt = (TextView) vi.findViewById(R.id.movie_points);
             final Button addPointButton = (Button) vi.findViewById(R.id.button_add_point);
 
-            pointsTxt.setText("0");
+            Integer rating = mRatedMovieMap.get(movie);
+            if (rating == null || rating == 0) {
+                pointsTxt.setText("0");
+            } else {
+                pointsTxt.setText(rating.toString());
+            } // end if-else
+
             addPointButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mPointsUsed < 10) {
-                        if (mRatedMovieMap.get(movie) != null) {
+                if (mPointsUsed < 10) {
+                    if (mRatedMovieMap.get(movie) != null) {
+                        if (mRatedMovieMap.get(movie) < maxRating) {
                             mRatedMovieMap.put(movie, mRatedMovieMap.get(movie) + 1);
                             pointsTxt.setText(mRatedMovieMap.get(movie).toString());
                             mPointsUsed++;
-                        } else {
-                            pointsTxt.setText("1");
-                            mRatedMovieMap.put(movie, 1);
-                            mPointsUsed++;
                         }
                     } else {
-                        Toast toast = Toast.makeText(mContext,
-                                "You used all the points!",
-                                Toast.LENGTH_SHORT);
-                        toast.show();
+                        pointsTxt.setText("1");
+                        mRatedMovieMap.put(movie, 1);
+                        mPointsUsed++;
                     }
+                } else {
+                    Toast toast = Toast.makeText(mContext,
+                            "You used all the points!",
+                            Toast.LENGTH_SHORT);
+                    toast.show();
+                }
                 }
             });
 

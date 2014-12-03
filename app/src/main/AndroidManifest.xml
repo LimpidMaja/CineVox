@@ -36,6 +36,11 @@
             android:label="@string/provider_name_friends"
             android:exported="false"/>
 
+        <provider android:authorities="com.limpidgreen.cinevox.user.provider"
+            android:name=".dao.UserContentProvider"
+            android:label="@string/provider_name_user"
+            android:exported="false"/>
+
         <service
             android:name="com.limpidgreen.cinevox.auth.AuthenticationService"
             android:exported="true" >
@@ -110,23 +115,31 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".NewEventActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
             android:label="@string/new_event">
         </activity>
         <activity
             android:name=".SelectFriendsActivity"
             android:label="@string/invite_friends"
             android:windowSoftInputMode="adjustPan"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".SelectMoviesActivity"
             android:label="@string/select_movies"
             android:windowSoftInputMode="adjustPan"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".EditVotingActivity"
@@ -136,41 +149,64 @@
         <activity
             android:name=".EventActivity"
             android:label="@string/event_details"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </activity>
         <service
             android:name=".util.ConfirmEventService"
-            android:label="Confirm Event Service" >
+            android:label="Confirm Event Service"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </service>
         <activity
             android:name=".AddMoviesToEventActivity"
             android:label="@string/event_details"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".RateMoviesActivity"
             android:label="@string/event_details"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".MoviesKnockoutActivity"
             android:label="@string/event_details"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".WinnerActivity"
             android:label="@string/event_details"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".SettingsActivity"
             android:label="@string/settings"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </activity>
         <activity
             android:name=".FriendsActivity"
             android:label="@string/friends"
-            android:theme="@android:style/Theme.Light.NoTitleBar" >
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
+        </activity>
+        <activity
+            android:name=".TraktActivity"
+            android:label="@string/trakt"
+            android:theme="@android:style/Theme.Light.NoTitleBar"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait" >
         </activity>
     </application>
 

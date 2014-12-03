@@ -19,10 +19,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
 import com.limpidgreen.cinevox.exception.APICallException;
 import com.limpidgreen.cinevox.model.Event;
@@ -46,10 +44,8 @@ import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -58,12 +54,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Utility methods for API communication.
@@ -73,7 +66,7 @@ import java.util.List;
  */
 public class NetworkUtil {
     /** POST parameter name for the user's facebook id */
-    public static final String PARAM__FACEBOOK_UID = "uid";
+    public static final String PARAM_FACEBOOK_UID = "uid";
     /** POST parameter name for the user's email */
     public static final String PARAM_EMAIL = "email";
     /** POST parameter name for the user's facebook access token */
@@ -86,6 +79,10 @@ public class NetworkUtil {
     public static final String PARAM_INFO = "info";
     /** GET parameter name for search term */
     public static final String PARAM_TERM = "term";
+    /** POST parameter name for trakt username */
+    public static final String PARAM_TRAKT_USERNAME = "trakt_username";
+    /** POST parameter name for trakt password */
+    public static final String PARAM_TRAKT_PASSWORD = "trakt_password";
 
 
     /** Request timeout */
@@ -123,8 +120,14 @@ public class NetworkUtil {
     public static final String MOVIES_URI = BASE_URL + "/api/movies";
     /** URI for movies search */
     public static final String MOVIES_SEARCH_URI = MOVIES_URI + "/autocomplete";
-    /** URI for movies search */
+    /** URI for movie list search */
     public static final String MOVIES_SEARCH_LISTS_URI = MOVIES_URI + "/search_lists";
+    /** URI for movies collection search */
+    public static final String MOVIES_SEARCH_COLLECTION_URI = MOVIES_URI + "/collection";
+    /** URI for trakt account save */
+    public static final String TRAKT_URI = "/trakt";
+    /** URI for trakt import */
+    public static final String TRAKT_IMPORT_URI = MOVIES_URI + "/import_trakt";
     /** URI for friends search */
     public static final String FRIENDS_SEARCH_URI = FRIENDS_URI + "/autocomplete";
 
@@ -167,7 +170,7 @@ public class NetworkUtil {
      */
     public static String authenticate(String userId, String accessToken, String gcmRegId, Date expirationDate, String email) {
         final ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(PARAM__FACEBOOK_UID, userId));
+        params.add(new BasicNameValuePair(PARAM_FACEBOOK_UID, userId));
         params.add(new BasicNameValuePair(PARAM_ACCESS_TOKEN, accessToken));
         params.add(new BasicNameValuePair(PARAM_GCM_REG_ID, gcmRegId));
         params.add(new BasicNameValuePair(PARAM_ACCESS_TOKEN_EXPIRES, String.valueOf(expirationDate.getTime())));
@@ -692,6 +695,44 @@ public class NetworkUtil {
     } // end getMoviesBySearch()
 
     /**
+     * Connects to server, returns movies by title.
+     *
+     * @param accessToken
+     * @return list of movies
+     */
+    public static ArrayList<Movie> getMoviesFromCollectionSearch(String accessToken, String term) {
+        final ArrayList<BasicNameValuePair> params = new ArrayList<BasicNameValuePair>();
+        if (term != null) {
+            params.add(new BasicNameValuePair(PARAM_TERM, term));
+        } // end if
+        try {
+
+            Log.i(Constants.TAG, "MOVIES URI: " + MOVIES_SEARCH_COLLECTION_URI);
+            JsonObject moviesJson =  getWebService(params, MOVIES_SEARCH_COLLECTION_URI, accessToken).getAsJsonObject();
+            Log.i(Constants.TAG, "MOVIES RESULT: " + moviesJson.toString());
+            if (moviesJson != null) {
+                Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                        .setDateFormat("yyyy-MM-dd HH:mm")
+                        .create();
+
+                ArrayList<Movie> movieList = gson.fromJson(
+                        moviesJson.get("movies"),
+                        new TypeToken<ArrayList<Movie>>() {
+                        }.getType());
+                return movieList;
+            } else {
+                return null;
+            } // end if-else
+        } catch (APICallException e) {
+            Log.e(Constants.TAG, "HTTP ERROR when searching movies - STATUS:" +  e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
+            Log.e(Constants.TAG, "IOException when searching movies", e);
+            return null;
+        } // end try-catch
+    } // end getMoviesFromCollectionSearch()
+
+    /**
      * Connects to server, returns movie lists by term.
      *
      * @param accessToken
@@ -807,7 +848,8 @@ public class NetworkUtil {
             resp = client.execute(post);
             StringBuilder builder = new StringBuilder();
             if (resp.getStatusLine().getStatusCode() == HttpStatus.SC_OK
-                    || resp.getStatusLine().getStatusCode() == HttpStatus.SC_CREATED) {
+                    || resp.getStatusLine().getStatusCode() == HttpStatus.SC_CREATED
+                    || resp.getStatusLine().getStatusCode() == HttpStatus.SC_ACCEPTED) {
                 InputStream inputStream = (resp.getEntity() != null) ? resp
                         .getEntity().getContent() : null;
                 if (inputStream != null) {

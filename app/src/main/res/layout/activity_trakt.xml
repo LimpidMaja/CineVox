@@ -1,0 +1,137 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:layout_gravity="center"
+    android:textAlignment="center"
+    tools:context=".MainActivity">
+
+    <RelativeLayout
+        android:id="@+id/titleBar"
+        android:layout_alignParentTop="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#ff3a3251"
+        android:gravity="center"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:textColor="#ffffff"
+            android:text="Trakt"
+            android:layout_marginLeft="10dp"
+            android:textSize="20sp"/>
+
+    </RelativeLayout>
+
+    <TextView
+        android:layout_below="@+id/titleBar"
+        android:id="@+id/trakt_msg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#ffd9b8f1"
+        android:textColor="#ffffff"
+        android:textSize="18sp"
+        android:padding="5dp"
+        android:gravity="center"
+        android:layout_marginBottom="10dp"
+        android:text="Import your Movie Collection from Trakt.tv"/>
+
+    <LinearLayout
+        android:id="@+id/line_1"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/trakt_msg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <TextView
+            android:text="Trakt Username"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="40dp"
+            android:background="#ff877ac3"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:gravity="center"/>
+
+        <EditText
+            android:id="@+id/trakt_username"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="40dp"
+            android:background="#ffd9b8f1"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:paddingLeft="10dp"
+            android:hint="username"
+            android:gravity="left|center"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/line_2"
+        android:layout_marginTop="10dp"
+        android:layout_below="@+id/line_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <TextView
+            android:text="Trakt Password"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="40dp"
+            android:background="#ff877ac3"
+            android:textColor="#ffffff"
+            android:inputType="text"
+            android:textSize="18sp"
+            android:gravity="center"/>
+
+        <EditText
+            android:id="@+id/trakt_password"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="40dp"
+            android:background="#ffd9b8f1"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:inputType="textPassword"
+            android:paddingLeft="10dp"
+            android:hint="********"
+            android:gravity="left|center"/>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/import_trakt_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:textSize="30sp"
+        android:layout_marginTop="20dp"
+        android:padding="10dp"
+        android:layout_marginBottom="20dp"
+        android:background="#ffe962f1"
+        android:textColor="#ffffff"
+        android:onClick="handleSaveTrakt"
+        android:layout_below="@+id/line_2"/>
+
+    <Button
+        android:id="@+id/save_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Import Movies Now"
+        android:textSize="25sp"
+        android:padding="5dp"
+        android:layout_marginBottom="20dp"
+        android:background="#ff8c52c3"
+        android:textColor="#ffffff"
+        android:onClick="handleImportTrakt"
+        android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>

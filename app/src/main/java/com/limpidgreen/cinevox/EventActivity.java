@@ -10,6 +10,7 @@ package com.limpidgreen.cinevox;
 
 import android.app.Activity;
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -50,6 +51,12 @@ public class EventActivity extends Activity {
     private CineVoxApplication mApplication;
     private ContentResolver mResolver;
     private EventObserver mObserver;
+    private ProgressDialog mProgressDialog = null;
+    private ConfirmEventTask mConfirmEventTask;
+    private CancelEventTask mCancelEventTask;
+    private ContinueEventTask mContinueEventTask;
+    private WaitEventTask mWaitEventTask;
+    private StartAnywaysEventTask mStartAnywaysEventTask;
 
     private TextView mWaitingUsers;
     private LinearLayout mConfirm;
@@ -333,6 +340,24 @@ public class EventActivity extends Activity {
     }
 
     /**
+     * Shows the progress UI for a lengthy operation.
+     */
+    private void showProgress(String msg) {
+        mProgressDialog = ProgressDialog.show(this, null,
+                msg, true, true, null);
+    } // end showProgress()
+
+    /**
+     * Hides the progress UI for a lengthy operation.
+     */
+    private void hideProgress() {
+        if (mProgressDialog != null) {
+            mProgressDialog.dismiss();
+            mProgressDialog = null;
+        } // end if
+    } // end hideProgress()
+
+    /**
      * Handle Select Friends button click.
      *
      * @param v view
@@ -351,8 +376,11 @@ public class EventActivity extends Activity {
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(mEvent.getId());
 
-        ConfirmEventTask task = new ConfirmEventTask();
-        task.execute(true);
+        if (mConfirmEventTask == null) {
+            showProgress("Sending Confirmation");
+            mConfirmEventTask = new ConfirmEventTask();
+            mConfirmEventTask.execute(true);
+        }
     }
 
     /**
@@ -364,8 +392,11 @@ public class EventActivity extends Activity {
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(mEvent.getId());
 
-        ConfirmEventTask task = new ConfirmEventTask();
-        task.execute(false);
+        if (mConfirmEventTask == null) {
+            showProgress("Sending Answer");
+            mConfirmEventTask = new ConfirmEventTask();
+            mConfirmEventTask.execute(false);
+        }
     }
 
     /**
@@ -377,8 +408,11 @@ public class EventActivity extends Activity {
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(mEvent.getId());
 
-        CancelEventTask task = new CancelEventTask();
-        task.execute();
+        if (mCancelEventTask == null) {
+            showProgress("Cancelling Event");
+            mCancelEventTask = new CancelEventTask();
+            mCancelEventTask.execute();
+        }
     }
 
     /**
@@ -390,8 +424,11 @@ public class EventActivity extends Activity {
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(mEvent.getId());
 
-        ContinueEventTask task = new ContinueEventTask();
-        task.execute();
+        if (mContinueEventTask == null) {
+            showProgress("Updating Event");
+            mContinueEventTask = new ContinueEventTask();
+            mContinueEventTask.execute();
+        }
     }
 
     /**
@@ -403,8 +440,11 @@ public class EventActivity extends Activity {
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(mEvent.getId());
 
-        WaitEventTask task = new WaitEventTask();
-        task.execute();
+        if (mWaitEventTask == null) {
+            showProgress("Updating Event");
+            mWaitEventTask = new WaitEventTask();
+            mWaitEventTask.execute();
+        }
     }
 
     /**
@@ -416,8 +456,11 @@ public class EventActivity extends Activity {
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.cancel(mEvent.getId());
 
-        StartAnywaysEventTask task = new StartAnywaysEventTask();
-        task.execute();
+        if (mStartAnywaysEventTask == null) {
+            showProgress("Updating Event");
+            mStartAnywaysEventTask = new StartAnywaysEventTask();
+            mStartAnywaysEventTask.execute();
+        }
     }
 
     /*
@@ -464,6 +507,8 @@ public class EventActivity extends Activity {
     } // end onActivityResult()
 
     public void onConfirmEventResult(Event event) {
+        mConfirmEventTask = null;
+        hideProgress();
         mEvent = event;
 
         boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, true);
@@ -482,12 +527,16 @@ public class EventActivity extends Activity {
     }
 
     public void onConfirmEventError() {
+        mConfirmEventTask = null;
+        hideProgress();
         Toast toast = Toast.makeText(this,
                 "There was a problem confirming the event. Try again!", Toast.LENGTH_SHORT);
         toast.show();
     }
 
     public void onCancelEventResult(Event event) {
+        mCancelEventTask = null;
+        hideProgress();
         mEvent = event;
 
         boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, true);
@@ -506,12 +555,16 @@ public class EventActivity extends Activity {
     }
 
     public void onCancelEventError() {
+        mCancelEventTask = null;
+        hideProgress();
         Toast toast = Toast.makeText(this,
                 "There was a problem cancelling the event. Try again!", Toast.LENGTH_SHORT);
         toast.show();
     }
 
     public void onContinueEventResult(Event event) {
+        mContinueEventTask = null;
+        hideProgress();
         mEvent = event;
 
         boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, true);
@@ -530,12 +583,16 @@ public class EventActivity extends Activity {
     }
 
     public void onContinueEventError() {
+        mContinueEventTask = null;
+        hideProgress();
         Toast toast = Toast.makeText(this,
                 "There was a problem continuing the event. Try again!", Toast.LENGTH_SHORT);
         toast.show();
     }
 
     public void onStartEventResult(Event event) {
+        mStartAnywaysEventTask = null;
+        hideProgress();
         mEvent = event;
 
         boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, true);
@@ -554,12 +611,16 @@ public class EventActivity extends Activity {
     }
 
     public void onStartEventError() {
+        mStartAnywaysEventTask = null;
+        hideProgress();
         Toast toast = Toast.makeText(this,
                 "There was a problem starting the event. Try again!", Toast.LENGTH_SHORT);
         toast.show();
     }
 
     public void onWaitEventResult(Event event) {
+        mWaitEventTask = null;
+        hideProgress();
         mEvent = event;
 
         boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, true);
@@ -578,6 +639,8 @@ public class EventActivity extends Activity {
     }
 
     public void onWaitEventError() {
+        mWaitEventTask = null;
+        hideProgress();
         Toast toast = Toast.makeText(this,
                 "There was a problem increasing time limit for the event. Try again!", Toast.LENGTH_SHORT);
         toast.show();

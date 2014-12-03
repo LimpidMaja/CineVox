@@ -39,18 +39,29 @@
             android:layout_height="80dp"
             android:background="#ffffff" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#ff3a3251"
+            android:textColor="#ffffff"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:padding="3dp"
+            android:text="Add Movies"/>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="2">
+            android:weightSum="3">
 
             <Button
                 android:id="@+id/select_movies_manually_button"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="Add Movies Manually"
+                android:text="Manually"
                 android:padding="10dp"
                 android:textSize="14sp"
                 android:textColor="#FFFFFF"
@@ -63,11 +74,24 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="Add Movies from Lists"
+                android:text="From Lists"
                 android:padding="10dp"
                 android:textSize="14sp"
                 android:textColor="#FFFFFF"
                 android:onClick="handleShowMoviesList"
+                android:background="#ffd9b8f1"
+                android:layout_margin="1dp" />
+
+            <Button
+                android:id="@+id/select_movies_collection_button"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="From Collection"
+                android:padding="10dp"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:onClick="handleShowMoviesCollection"
                 android:background="#ffd9b8f1"
                 android:layout_margin="1dp" />
 
@@ -165,6 +189,73 @@
                 android:divider="@null"
                 android:layout_height="match_parent"
                 android:layout_width="match_parent"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/select_movies_collection_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#ffd9b8f1"
+            android:visibility="gone"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/search_collection"
+                android:layout_alignParentTop="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/searchCollectionMovies"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:background="#ffe5d3f1"
+                    android:textColor="#ffffff"
+                    android:textSize="18sp"
+                    android:paddingLeft="10dp"
+                    android:hint="Search for Movies in your Collection"
+                    android:gravity="left|center"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="2">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0.5"
+                        android:textSize="15dp"
+                        android:padding="4dp"
+                        android:textColor="#ffffff"
+                        android:background="#ffc57df1"
+                        android:text="Sort:"/>
+                    <com.limpidgreen.cinevox.util.ClickSpinner
+                        android:id="@+id/sort_select"
+                        android:layout_width="0dp"
+                        android:layout_weight="1.5"
+                        android:layout_height="wrap_content"
+                        android:spinnerMode="dialog"
+                        android:padding="4dp"
+                        android:textAlignment="center"
+                        android:background="#ffc57df1"
+                        android:entries="@array/sort_array" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <ListView
+                android:id="@+id/listCollectionMovies"
+                android:background="#ffffff"
+                android:dividerHeight="0dp"
+                android:divider="@null"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            </ListView>
 
         </LinearLayout>
 

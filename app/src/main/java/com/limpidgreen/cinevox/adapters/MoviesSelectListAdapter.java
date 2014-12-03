@@ -118,7 +118,12 @@ public class MoviesSelectListAdapter extends BaseAdapter {
                 .showImageOnFail(android.R.drawable.ic_menu_crop)
                 .bitmapConfig(Bitmap.Config.RGB_565).build();
 
-        ImageLoader.getInstance().displayImage(movie.getPoster(), moviePoster, mOptions);
+
+        if (movie.getPoster().contains("original")) {
+            ImageLoader.getInstance().displayImage(movie.getPoster().replace("original", "w92"), moviePoster, mOptions);
+        } else {
+            ImageLoader.getInstance().displayImage(movie.getPoster(), moviePoster, mOptions);
+        } // end if-else
 
         title.setText(movie.getTitle());
 
@@ -128,7 +133,7 @@ public class MoviesSelectListAdapter extends BaseAdapter {
             selectIcon.setImageResource(android.R.drawable.ic_menu_add);
         }
 
-        vi.setOnClickListener(new View.OnClickListener() {
+        selectIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mSelectedMovieList.contains(movie)) {

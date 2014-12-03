@@ -77,7 +77,11 @@ public class WinnerActivity extends Activity {
                 .showImageOnFail(android.R.drawable.ic_menu_crop)
                 .bitmapConfig(Bitmap.Config.RGB_565).build();
 
-        ImageLoader.getInstance().displayImage(mEvent.getWinner().getPoster(), moviePoster, mOptions);
+        if (mEvent.getWinner().getPoster().contains("original")) {
+            ImageLoader.getInstance().displayImage(mEvent.getWinner().getPoster().replace("original", "w92"), moviePoster, mOptions);
+        } else {
+            ImageLoader.getInstance().displayImage(mEvent.getWinner().getPoster(), moviePoster, mOptions);
+        } // end if-else
 
         title.setText(mEvent.getWinner().getTitle());
     }

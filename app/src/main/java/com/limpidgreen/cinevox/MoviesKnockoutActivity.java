@@ -8,24 +8,20 @@
  */
 package com.limpidgreen.cinevox;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.limpidgreen.cinevox.adapters.MoviesRateListAdapter;
 import com.limpidgreen.cinevox.dao.EventsContentProvider;
 import com.limpidgreen.cinevox.model.Event;
 import com.limpidgreen.cinevox.model.EventStatus;
@@ -43,16 +39,10 @@ import com.nostra13.universalimageloader.core.ImageLoader;
 public class MoviesKnockoutActivity extends Activity {
     /** Application */
     private CineVoxApplication mApplication;
-    /** User Account */
-    private Account mAccount;
-    /** Account manager */
-    private AccountManager mAccountManager;
-    /** User Account API Token */
-    private String mAuthToken;
-
     private Event mEvent;
-
     private Integer selectedMovieId;
+    private ProgressDialog mProgressDialog = null;
+    private VoteEventEventTask mVoteEventEventTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,10 +113,18 @@ public class MoviesKnockoutActivity extends Activity {
                 .showImageOnFail(android.R.drawable.ic_menu_crop)
                 .bitmapConfig(Bitmap.Config.RGB_565).build();
 
-        ImageLoader.getInstance().displayImage(mEvent.getKnockout().getMovie1().getPoster(), moviePoster1, mOptions);
+        if (mEvent.getKnockout().getMovie1().getPoster().contains("original")) {
+            ImageLoader.getInstance().displayImage(mEvent.getKnockout().getMovie1().getPoster().replace("original", "w92"), moviePoster1, mOptions);
+        } else {
+            ImageLoader.getInstance().displayImage(mEvent.getKnockout().getMovie1().getPoster(), moviePoster1, mOptions);
+        } // end if-else
         title1.setText(mEvent.getKnockout().getMovie1().getTitle());
 
-        ImageLoader.getInstance().displayImage(mEvent.getKnockout().getMovie2().getPoster(), moviePoster2, mOptions);
+        if (mEvent.getKnockout().getMovie2().getPoster().contains("original")) {
+            ImageLoader.getInstance().displayImage(mEvent.getKnockout().getMovie2().getPoster().replace("original", "w92"), moviePoster2, mOptions);
+        } else {
+            ImageLoader.getInstance().displayImage(mEvent.getKnockout().getMovie2().getPoster(), moviePoster2, mOptions);
+        } // end if-else
         title2.setText(mEvent.getKnockout().getMovie2().getTitle());
 
 
@@ -161,8 +159,11 @@ public class MoviesKnockoutActivity extends Activity {
      */
     public void handleKnockoutDone(View v) {
         if (selectedMovieId != null) {
-            VoteEventEventTask task = new VoteEventEventTask();
-            task.execute();
+            if (mVoteEventEventTask == null) {
+                showProgress("Submitting Vote");
+                mVoteEventEventTask = new VoteEventEventTask();
+                mVoteEventEventTask.execute();
+            }
         } else {
             Toast toast = Toast.makeText(this,
                     "Choose a movie!", Toast.LENGTH_SHORT);
@@ -170,7 +171,27 @@ public class MoviesKnockoutActivity extends Activity {
         }
     }
 
+    /**
+     * Shows the progress UI for a lengthy operation.
+     */
+    private void showProgress(String msg) {
+        mProgressDialog = ProgressDialog.show(this, null,
+                msg, true, true, null);
+    } // end showProgress()
+
+    /**
+     * Hides the progress UI for a lengthy operation.
+     */
+    private void hideProgress() {
+        if (mProgressDialog != null) {
+            mProgressDialog.dismiss();
+            mProgressDialog = null;
+        } // end if
+    } // end hideProgress()
+
     public void onVoteEventResult(Event event) {
+        mVoteEventEventTask = null;
+        hideProgress();
         mEvent = event;
 
         boolean result = EventsContentProvider.insertEvent(getContentResolver(), mEvent, true);
@@ -212,6 +233,8 @@ public class MoviesKnockoutActivity extends Activity {
     }
 
     public void onVoteEventError() {
+        mVoteEventEventTask = null;
+        hideProgress();
         Toast toast = Toast.makeText(this,
                 "There was a problem voting for the movie. Try again!", Toast.LENGTH_SHORT);
         toast.show();

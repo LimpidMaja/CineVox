@@ -24,6 +24,14 @@ public class CineVoxDBHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "cinevox.db";
     private static final int DATABASE_VERSION = 1;
 
+    // User DB Table constants
+    public static final String USER_TABLE_NAME = "user";
+    public static final String USER_COL_ID = "_id";
+    public static final String USER_COL_USERNAME = "username";
+    public static final String USER_COL_NAME = "name";
+    public static final String USER_COL_TRAKT_USERNAME = "trakt_username";
+    public static final String USER_COL_TRAKT_PASSWORD = "trakt_password";
+
     // Event DB Table constants
     public static final String EVENTS_TABLE_NAME = "events";
     public static final String EVENTS_COL_ID = "_id";
@@ -88,6 +96,16 @@ public class CineVoxDBHelper extends SQLiteOpenHelper {
     public static final String EVENT_KNOCKOUT_COL_MOVIE_ID_1 = "movie_id_1";
     public static final String EVENT_KNOCKOUT_COL_MOVIE_ID_2 = "movie_id_2";
     public static final String EVENT_KNOCKOUT_COL_ROUND = "round";
+
+    // User Database creation sql statement
+    public static final String DATABASE_CREATE_USER = "create table "
+            + USER_TABLE_NAME + "(" +
+            USER_COL_ID + " integer primary key, " +
+            USER_COL_USERNAME + " text not null, " +
+            USER_COL_NAME + " text not null, " +
+            USER_COL_TRAKT_USERNAME + " text, " +
+            USER_COL_TRAKT_PASSWORD + " text, " +
+            "UNIQUE (" + USER_COL_ID + ") ON CONFLICT REPLACE);";
 
     // Event Database creation sql statement
     public static final String DATABASE_CREATE_EVENTS = "create table "
@@ -174,6 +192,7 @@ public class CineVoxDBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase database) {
 
+        database.execSQL(DATABASE_CREATE_USER);
         database.execSQL(DATABASE_CREATE_EVENTS);
         database.execSQL(DATABASE_CREATE_FRIENDS);
         database.execSQL(DATABASE_CREATE_EVENT_FRIENDS);
@@ -194,6 +213,7 @@ public class CineVoxDBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + EVENTS_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + FRIENDS_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + MOVIES_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + USER_TABLE_NAME);
         onCreate(db);
     }
 

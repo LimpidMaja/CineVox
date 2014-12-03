@@ -226,9 +226,9 @@ public class FBLoginActivity extends AccountAuthenticatorActivity {
         if (success) {
             mGcmRegId = regId;
 
-            Toast.makeText(
-                    mApplicationContext,
-                    "Registered with GCM Server successfully: " + mGcmRegId, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(
+            //        mApplicationContext,
+            //        "Registered with GCM Server successfully: " + mGcmRegId, Toast.LENGTH_SHORT).show();
 
             if (mAuthTask == null) {
                 mAuthTask = new UserAuthenticateTask();
