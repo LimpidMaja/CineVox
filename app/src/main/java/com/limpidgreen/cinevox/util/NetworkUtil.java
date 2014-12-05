@@ -88,8 +88,8 @@ public class NetworkUtil {
     /** Request timeout */
     public static final int HTTP_REQUEST_TIMEOUT_MS = 30 * 1000;
     /** Base URL for the API Service */
-    //public static final String BASE_URL = "http://192.168.1.103:3000";
-    public static final String BASE_URL = "http://cinevox.herokuapp.com";
+    public static final String BASE_URL = "http://192.168.1.103:3000";
+    //public static final String BASE_URL = "http://cinevox.herokuapp.com";
 
     /** URI for authentication service */
     public static final String AUTH_URI = BASE_URL + "/api/auth/facebook/callback";

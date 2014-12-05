@@ -19,8 +19,9 @@ import java.util.ArrayList;
  */
 public class MovieList {
 
+    @SerializedName("name")
     private String title;
-
+    private String url;
     @SerializedName("movies")
     private ArrayList<Movie> movieList;
 
@@ -62,6 +63,14 @@ public class MovieList {
 
     public void setMovieList(ArrayList<Movie> movieList) {
         this.movieList = movieList;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     @Override

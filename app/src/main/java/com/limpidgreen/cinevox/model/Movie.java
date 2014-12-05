@@ -37,6 +37,7 @@ public class Movie implements Parcelable {
     private Date releaseDate;
     @SerializedName("date_collected")
     private Date dateAdded;
+    private Integer runtime;
 
     public Movie(Integer id, String title, String poster, String year) {
         this.id = id;
@@ -206,6 +207,14 @@ public class Movie implements Parcelable {
         this.dateAdded = dateAdded;
     }
 
+    public Integer getRuntime() {
+        return runtime;
+    }
+
+    public void setRuntime(Integer runtime) {
+        this.runtime = runtime;
+    }
+
     @Override
     public String toString() {
         return "Movie{" +
@@ -316,6 +325,36 @@ public class Movie implements Parcelable {
                 movie2.setDateAdded(new Date(Long.MIN_VALUE));
             }
             return movie2.getDateAdded().compareTo(movie1.getDateAdded());
+        }
+    };
+
+    /**
+     * Ascending runtime comparator.
+     */
+    public static Comparator<Movie> RUNTIME_ASC_COMPARATOR = new Comparator<Movie>() {
+        public int compare(Movie movie1, Movie movie2) {
+            if (movie1.getRuntime() == null) {
+                movie1.setRuntime(Integer.MAX_VALUE);
+            }
+            if (movie2.getRuntime() == null) {
+                movie2.setRuntime(Integer.MAX_VALUE);
+            }
+            return movie1.getRuntime().compareTo(movie2.getRuntime());
+        }
+    };
+
+    /**
+     * Descending runtime comparator.
+     */
+    public static Comparator<Movie> RUNTIME_DESC_COMPARATOR = new Comparator<Movie>() {
+        public int compare(Movie movie1, Movie movie2) {
+            if (movie1.getRuntime() == null) {
+                movie1.setRuntime(0);
+            }
+            if (movie2.getRuntime() == null) {
+                movie2.setRuntime(0);
+            }
+            return movie2.getRuntime().compareTo(movie1.getRuntime());
         }
     };
 }

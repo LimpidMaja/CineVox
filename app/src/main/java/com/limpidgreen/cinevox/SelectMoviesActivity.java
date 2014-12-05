@@ -270,6 +270,22 @@ public class SelectMoviesActivity extends Activity {
                             mSearchCollection.setText("");
                             mSorting = 3;
                             break;
+                        case 4:
+                            if (mSorting == 4) {
+                                if (mDescending) {
+                                    mDescending = false;
+                                } else {
+                                    mDescending = true;
+                                } // end if-else
+                            } // end if
+                            if (mDescending) {
+                                Collections.sort(mMovieCollection, Movie.RUNTIME_DESC_COMPARATOR);
+                            } else {
+                                Collections.sort(mMovieCollection, Movie.RUNTIME_ASC_COMPARATOR);
+                            } // end if-else
+                            mSearchCollection.setText("");
+                            mSorting = 4;
+                            break;
                     } // end switch
                 } // end if
             }

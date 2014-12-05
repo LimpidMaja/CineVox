@@ -45,5 +45,6 @@
         <item>Rating</item>
         <item>Date Added</item>
         <item>Release Date</item>
+        <item>Runtime</item>
     </string-array>
 </resources>
